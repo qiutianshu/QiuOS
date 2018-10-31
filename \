@@ -20,7 +20,7 @@
 GDT:		Descriptor        0,                     0,                      0		;空描述符
 CODE32:		Descriptor	  0, 		         Code32Len - 1,          0x98 + 0x4000  ;32位代码段
 VIDEO:		Descriptor	  0xb8000,		 0xffff,		 0x92		;显存
-TEST:		Descriptor	  0x500000,	         0xffff,		 0x92		;测试段
+TEST:		Descriptor	  0x5000000,	         0xffff,		 0x92		;测试段
 DATA:		Descriptor	  0,			 DataLen - 1,		 0x92		;数据段
 STACK:		Descriptor	  0,			 TopOfStack - 1,	 0x92 + 0x4000  ;32位栈段	
 NORMAL:		Descriptor	  0,			 0xffff,		 0x92		;普通段
@@ -149,7 +149,7 @@ SEG_CODE32:
 	call Read
 	call Write
 	call Read
-
+	jmp $
 
 
 
@@ -218,9 +218,7 @@ DispAl:
 Write:
 	push esi
 	push edi
-	push eax
 	xor esi,esi
-	xor edi,edi
 	mov esi,offsetMessage3
 	cld
 .1:
@@ -232,7 +230,6 @@ Write:
 	jmp .1
 
 .end:
-	pop eax
 	pop edi
 	pop esi
 	ret	
