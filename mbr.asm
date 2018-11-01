@@ -19,6 +19,7 @@
 ;				段基址			段界限			段属性
 GDT:		Descriptor        0,                     0,                      0		;空描述符
 CODE32:		Descriptor	  0, 		         Code32Len - 1,          0x98 + 0x4000  ;32位代码段
+CODE16:		Descriptor	  0,			 0xffff,		 0x98		;16位代码段
 VIDEO:		Descriptor	  0xb8000,		 0xffff,		 0x92		;显存
 TEST:		Descriptor	  0x500000,	         0xffff,		 0x92		;测试段
 DATA:		Descriptor	  0,			 DataLen - 1,		 0x92		;数据段
@@ -31,6 +32,7 @@ GdtPtr		dw	$-GDT-1									;GDT界限
 
 ;段选择子
 SelectorCode32		equ	 CODE32	-	GDT
+SelectorCode16		equ	 CODE16 - 	GDT
 SelectorVideo		equ	 VIDEO	-	GDT
 SelectorTest		equ	 TEST   -       GDT
 SelectorStack		equ	 STACK  -	GDT
@@ -59,6 +61,7 @@ BEGIN:
 	mov ds,ax
 	mov es,ax
 	mov ss,ax
+;	mov [GO_BACK_TO_REAL+3],cs
 
 ;设置32位代码段描述符
 	xor eax,eax
@@ -69,6 +72,16 @@ BEGIN:
 	shr eax,16
 	mov byte [CODE32+4],al	;代码段基址2
 	mov byte [CODE32+7],ah	;代码段基址3
+
+;设置16位代码段描述符
+	xor eax,eax
+	mov ax,cs
+	shl eax,4
+	add eax,SEG_CODE16
+	mov word [CODE16+2],ax
+	shr eax,16
+	mov byte [CODE16+4],al
+	mov byte [CODE16+7],ah
 
 ;设置数据段描述符
 	xor eax,eax
@@ -150,8 +163,8 @@ SEG_CODE32:
 	call Write
 	call Read
 
-
-
+	jmp SelectorCode16:0		;恢复cs高速缓冲器
+	
 
 ;函数定义
 NextLine:				;换行显示    edi始终指向要显示的下一行
@@ -191,7 +204,7 @@ DispAl:
 	push edx
 	mov ecx,2
 	mov ah,0xa
-	mov dl,al		;al的副本
+	mov dl,al			;al的副本
 	shr al,4
 .3:
 	and al,01111b
@@ -238,5 +251,37 @@ Write:
 	ret	
 
 Code32Len	equ	$-SEG_CODE32
+
+[SECTION .s16]
+[BITS 16]
+;跳回实模式
+SEG_CODE16:
+	mov ax,SelectorNormal		;恢复数据段描述符高速缓存器
+	mov ds,ax
+	mov es,ax
+	mov gs,ax
+	mov ss,ax
+
+	mov eax,cr0
+	and al,011111110b
+	mov cr0,eax
+
+;GO_BACK_TO_REAL:
+;	jmp 0:REAL_ENTRY
+
+REAL_ENTRY:
+;	mov ax,cs			;恢复段寄存器
+;	mov ds,ax
+;	mov es,ax
+;	mov gs,ax
+;	mov ss,ax
+
+	in al,92h			;打开A20地址线
+	and al,011111101b
+	out 92h,al
+
+	sti				;开中断
+	mov ax,0x4c00
+	int 21h
 
 
