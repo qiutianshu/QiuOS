@@ -17,37 +17,53 @@
 ;段描述符
 [SECTION .gdt]
 ;				段基址			段界限			段属性
-GDT:		Descriptor        0,                     0,                      0		;空描述符
-CODE32:		Descriptor	  0, 		         Code32Len - 1,          0x98 + 0x4000  ;32位代码段
-CODE16:		Descriptor	  0,			 0xffff,		 0x98		;16位代码段
-VIDEO:		Descriptor	  0xb8000,		 0xffff,		 0x92		;显存
-TEST:		Descriptor	  0x500000,	         0xffff,		 0x92		;测试段
-DATA:		Descriptor	  0,			 DataLen - 1,		 0x92		;数据段
-STACK:		Descriptor	  0,			 TopOfStack - 1,	 0x92 + 0x4000  ;32位栈段	
-NORMAL:		Descriptor	  0,			 0xffff,		 0x92		;普通段
+GDT:		Descriptor       	 0,             0,                      0				;空描述符
+CODE32:		Descriptor	 		 0, 		    Code32Len - 1,          0x98 + 0x4000  	;32位代码段
+CODE16:		Descriptor			 0,			 	0xffff,		 			0x98			;16位代码段
+VIDEO:		Descriptor	  		 0xb8000,		0xffff,		 			0x92			;显存
+TEST:		Descriptor	  		 0x500000,	    0xffff,		 			0x92			;测试段
+DATA:		Descriptor	  		 0,			 	DataLen - 1,		 	0x92			;数据段
+STACK:		Descriptor	  		 0,			 	TopOfStack - 1,	 		0x92 + 0x4000  	;32位栈段	
+NORMAL:		Descriptor	    	 0,			 	0xffff,		 			0x92			;普通段
+LDT:		Descriptor	  		 0,			 	LdtLen-1,		 		0x82			;LDT段
 
 ;GDT寄存器
-GdtPtr		dw	$-GDT-1									;GDT界限
-		dd	0									;GDT基地址(16位模式下低20位有效)
+GdtPtr		dw	$-GDT-1							;GDT界限
+			dd	0								;GDT基地址(16位模式下低20位有效)
 
 ;段选择子
 SelectorCode32		equ	 CODE32	-	GDT
 SelectorCode16		equ	 CODE16 - 	GDT
 SelectorVideo		equ	 VIDEO	-	GDT
-SelectorTest		equ	 TEST   -       GDT
+SelectorTest		equ	 TEST   -   GDT
 SelectorStack		equ	 STACK  -	GDT
 SelectorData		equ	 DATA	-	GDT
 SelectorNormal		equ	 NORMAL	-	GDT
+SelectorLdt		    equ	 LDT	-	GDT
+
+;LDT描述符	
+[SECTION .ldt]
+;						基地址			段界限			段属性
+LABEL_LDT_DEST:
+LABEL_LDT:	Descriptor	0,			LocalTaskLen-1,		0x4000+0x98		;32位非一致代码段
+
+LdtLen		equ		$ - LABEL_LDT
+
+;LDT段选择子
+SelectorLocalTask	equ	LABEL_LDT - LABEL_LDT_DEST + 0100b
 
 [SECTION .data]
 LABEL_DATA:
-	Message1		db 	"Protect Mode",0
+	Message1			db 	"Protect Mode",0
 	offsetMessage1		equ	Message1 - $$
-	Message2		db	"Real Mode",0
+	Message2			db	"Real Mode",0
 	offsetMessage2		equ	Message2 - $$
-	Message3		db	"abcdefgh",0
+	Message3			db	"abcdefgh",0
 	offsetMessage3		equ	Message3 - $$
-	DataLen			equ	$ - LABEL_DATA
+	Message4			db	"In Local Task",0
+	offsetMessage4		equ	Message4 - $$
+	DataLen				equ	$ - LABEL_DATA
+
 
 [SECTION .stack]
 LABEL_STACK:
@@ -102,6 +118,26 @@ BEGIN:
 	shr eax,16
 	mov byte [STACK+4],al
 	mov byte [STACK+7],ah
+
+;设置LDT在GDT中的描述符
+	xor eax,eax
+	mov ax,cs
+	shl eax,4
+	add eax,LABEL_LDT
+	mov word [LDT+2],ax
+	shr eax,16
+	mov byte [LDT+4],al	
+	mov byte [LDT+7],ah
+
+;设置LDT描述符
+	xor eax,eax
+	mov ax,cs
+	shl eax,4
+	add eax,LOCAL_TASK
+	mov word [LABEL_LDT+2],ax
+	shr eax,16
+	mov byte [LABEL_LDT+4],al
+	mov byte [LABEL_LDT+7],ah
 
 ;设置GDT寄存器	
 	xor eax,eax
@@ -163,7 +199,11 @@ SEG_CODE32:
 	call Write
 	call Read
 
-	jmp SelectorCode16:0		;恢复cs高速缓冲器
+;	jmp SelectorCode16:0		;恢复cs高速缓冲器
+	mov ax,SelectorLdt
+	lldt ax
+
+	jmp SelectorLocalTask:0
 	
 
 ;函数定义
@@ -285,3 +325,25 @@ REAL_ENTRY:
 	int 21h
 
 
+[SECTION .localtask]			;局部任务代码段
+[BITS 32]
+ALIGN 32
+LOCAL_TASK:
+	mov ax,SelectorVideo
+	mov gs,ax
+	mov edi,(80*0)*2
+	mov ah,0x0c
+	xor esi,esi
+	mov esi,offsetMessage4
+	cld
+.1:
+	lodsb
+	test al,al
+	jz .2				;跳回16位代码段返回实模式
+	mov [gs:edi],ax
+	add edi,2
+	jmp .1
+.2:
+	jmp SelectorCode16:0
+
+LocalTaskLen	equ	$ - LOCAL_TASK
