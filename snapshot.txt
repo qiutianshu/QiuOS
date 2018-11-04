@@ -1,0 +1,25 @@
+Ring0 -> Ring3___________________________________________________________
+Ring3 -> Ring0
+WELCOME TO THE FREEDOS BETA4 RELEASE!
+
+
+Type INSTALL to start the FreeDOS installation
+
+If you need to create a partition on your hard disk for FreeDOS, you
+will need to do that yourself.  Use FDISK to create a partition, and
+use FORMAT to make the partition writable by FreeDOS.  You can run
+Protect Modes from this Install Boot Floppy.
+0000000000000000
+6162636465666768_________________________________________________________
+A:\>b:
+
+B:\>mbr.com
+
+B:\>ß
+
+
+
+
+
+
+
