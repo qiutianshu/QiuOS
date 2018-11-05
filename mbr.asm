@@ -1,28 +1,4 @@
-;The struct of Descriptor
-;	dd	base
-;	dd	limit(低20位有效)
-;	dw	attribute（低12位有效）
-
-%macro Descriptor 3
-	dw	%2 & 0xffff																			;段界限1
-	dw	%1 & 0xffff																			;段基址1
-	db	(%1>>16) & 0xff																		;段基址2
-	dw	((%2 >> 8) & 0F00h) | (%3 & 0F0FFh)													;属性8-11位无效
-	db	(%1>>24) &0xff																		;段基址3
-%endmacro
-
-;The struct of Gate
-;	dw  selector
-;	dd  offset
-;	db  count
-;	db	attribute
-%macro Gate 4
-	dw  (%2 & 0xffff)
-	dw  %1
-	dw	(%3 & 1Fh) | ((%4 << 8) & 0FF00h)
-	dw	((%2 >> 16) & 0FFFFh)
-%endmacro
-
+%include "pm.inc"
 
 	org 0x100
 	jmp BEGIN 
@@ -324,89 +300,7 @@ SEG_CODE32:
 	push 0
 	retf
 
-;函数定义
-NextLine:											;换行显示edi始终指向要显示的下一行
-	push eax
-	push ebx
-	xor eax,eax
-	mov eax,edi
-	mov bl,160
-	div bl											;al存放行号
-	and eax,0xff									;取得行号
-	add eax,1										;下一行
-	mov bl,160
-	mul bl
-	mov edi,eax
-	pop ebx
-	pop eax
-	ret
-
-Read:												;读取8字节
-	xor esi,esi
-	mov cx,8
-.1:
-	mov al,[es:esi]
-	call DispAl
-	dec cx
-	jz .2
-	inc esi
-	jmp .1
-
-.2:
-	call NextLine
-	ret
-
-DispAl:
-	push eax
-	push ecx
-	push edx
-	mov ecx,2
-	mov ah,0xa
-	mov dl,al										;al的副本
-	shr al,4
-.3:
-	and al,01111b
-	cmp al,9
-	ja .1
-	add al,"0"
-	jmp .2
-.1:
-	sub al,0xa
-	add al,"A"
-.2:
-	mov [gs:edi],ax
-	add edi,2
-	dec ecx
-	jz .4
-	mov al,dl
-	jmp .3
-.4:
-	pop edx
-	pop ecx
-	pop eax
-	ret
-
-Write:
-	push esi
-	push edi
-	push eax
-	xor esi,esi
-	xor edi,edi
-	mov esi,offsetMessage3
-	cld
-.1:
-	lodsb
-	test al,al
-	jz .end
-	mov [es:edi],al
-	inc edi
-	jmp .1
-
-.end:
-	pop eax
-	pop edi
-	pop esi
-	ret	
+%include "libc.inc"
 
 Code32Len	equ	$-SEG_CODE32
 
