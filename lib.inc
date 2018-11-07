@@ -109,3 +109,33 @@ DispReturn:								;换行
 	add esp,4
 	ret
 
+
+MemCpy:		
+	push ebp
+	mov ebp,esp
+	push edi
+	push esi
+	push ecx
+
+	mov edi,[ebp+8]		;目的地址
+	mov esi,[ebp+12]	;源地址
+	mov ecx,[ebp+16]	;长度
+
+.1:
+	cmp ecx,0
+	jz .2
+	mov al,[ds:esi]
+	mov byte [es:edi],al
+	inc edi
+	inc esi
+	dec ecx
+	jmp .1
+.2:
+	mov eax,[ebp+8]		;返回目的地址
+	pop ecx
+	pop esi
+	pop edi
+	mov esp,ebp
+	pop ebp
+
+	ret
