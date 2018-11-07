@@ -135,7 +135,7 @@ MemCpy:
 	pop ecx
 	pop esi
 	pop edi
-	mov esp,ebp
+;	mov esp,ebp
 	pop ebp
 
 	ret

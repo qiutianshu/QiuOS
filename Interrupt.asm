@@ -1,13 +1,5 @@
 %include "pm.inc"
 	
-PageDirBase0		equ		0					;页目录0从0开始
-PageTblBase0		equ		0x1000				;页表0从4k开始
-PageDirBase1		equ 	0x100000	 		;页目录1从0x100开始
-PageTblBase1 		equ		0x101000   			;页表从0x101000开始
-LinearAddrDemo		equ		0x401000
-ProcFoo				equ		0x401000
-ProcBar				equ		0x501000
-ProcPagingDemo		equ		0x301000
 
 	org 0x100
 	jmp BEGIN 
@@ -22,13 +14,28 @@ VIDEO:		Descriptor	  		 0xb8000,		0xffff,		 			0x93				;显存
 DATA:		Descriptor	  		 0,			 	DataLen - 1,		 	0x92				;数据段
 STACK:		Descriptor	  		 0,			 	TopOfStack,	 		    0x92 + 0x4000  		;32位栈段	
 NORMAL:		Descriptor	    	 0,			 	0xffff,		 			0x92				;普通段
-FLAT_RW:	Descriptor			 0,				0xfffff,				0x92 + 0x8000       ;读写数据段
-FLAT_C:		Descriptor			 0,				0xfffff,				0x9a + 0x4000+0x8000
 
 ;GDT寄存器
 GdtPtr		dw	$-GDT-1																		;GDT界限
 			dd	0																			;GDT基地址(16位模式下低20位有效)
 
+[SECTION .idt]
+ALIGN 32
+[BITS 32]
+LABEL_IDT:
+;								目标段选择子			偏移					count            属性
+%rep 32				
+				Gate			SelectorCode32,		SpuriousHandler,	0,				0x8e	;i386中断门
+%endrep
+.20h:			Gate			SelectorCode32,		ClockHandler,		0,				0x8e
+%rep 96
+				Gate			SelectorCode32,		SpuriousHandler,	0,				0x8e	;i386中断门
+%endrep
+
+IdtLen			equ			$ - LABEL_IDT
+
+IdtPtr			dw     IdtLen - 1				;idt界限
+				dd 	   0						;idt基地址
 ;段选择子
 SelectorCode32		equ	 CODE32	-	GDT
 SelectorCode16		equ	 CODE16 - 	GDT
@@ -36,8 +43,6 @@ SelectorVideo		equ	 VIDEO	-	GDT
 SelectorStack		equ	 STACK  -	GDT
 SelectorData		equ	 DATA	-	GDT
 SelectorNormal		equ	 NORMAL	-	GDT
-SelectorFlatRw		equ	 FLAT_RW - GDT
-SelectorFlatC		equ	 FLAT_C - GDT
 
 
 [SECTION .data]
@@ -103,23 +108,6 @@ BEGIN:
 	mov sp,0x100
 	mov [_wSPValueInRealMode],sp
 
-;扫描内存信息
-	mov ebx,0
-	mov di,_MemChkBuf
-.loop:
-	mov ecx,20
-	mov edx,0x534d4150
-	mov eax,0xe820
-	int 15h
-	jc CHACK_FAIL						;CF=1存在错误
-	add di,20
-	inc dword [_dwMCRNumber]
-	cmp ebx,0
-	jne .loop
-	jmp CHECK_OK						;最后一个地址范围描述符
-CHACK_FAIL:
-	MOV dword [_dwMCRNumber],0
-CHECK_OK:
 ;设置32位代码段描述符
 	xor eax,eax
 	mov ax,cs
@@ -166,12 +154,22 @@ CHECK_OK:
 	shl eax,4
 	add eax,GDT
 	mov dword [GdtPtr+2],eax
+
+	;设置LDTR寄存器	
+	xor eax,eax
+	mov ax,ds
+	shl eax,4
+	add eax,LABEL_IDT
+	mov dword [IdtPtr+2],eax
 	
 ;加载GDT
 	lgdt [GdtPtr]
 
 ;关中断
 	cli
+
+;加载IDTR
+	lidt [IdtPtr]
 
 ;打开A20地址线
 	in al,92h
@@ -197,228 +195,73 @@ SEG_CODE32:
 	mov gs,ax
 	mov esp,TopOfStack
 
-	push szPMMessage
-	call DispStr
-	add esp,4
-
-	push szMemChkTitle
-	call DispStr
-	add esp,4
-
-
-	call DispMemSIze
-;	call bar
-	call PagingDemo
-
+	call Init8259A
+	int 0x80
+	sti 											;打开中断屏蔽
 	jmp $
+	
+io_delay:
+	nop
+	nop
+	nop
+	nop
+	ret 
 
+Init8259A:
+	mov al,0x11					;主ICW1
+	out 0x20,al
+	call io_delay
 
+	out 0xa0,al 				;从ICW1
+	call io_delay
 
-DispMemSIze:										;显示内存段信息
-	push esi
-	push ecx
-	mov esi,MemChkBuf
-	mov ecx,[dwMCRNumber]
-.1:
-	mov edx,5
-	mov edi,ARDStruct
-.2:
-	push dword [esi]
-	call DispInt
-	pop eax
-	mov dword [edi],eax
-	add edi,4
-	add esi,4
-	dec edx
-	jnz .2
-	cmp dword [dwType],1
-	jne .3
-	mov eax,[dwBaseAddrLow]
-	add eax,[dwLengthLow]
-	cmp eax,[dwMemSize]
-	jb .1
-	mov [dwMemSize],eax
-.3:
-	call DispReturn
-	dec ecx
-	jnz .1
-	push szRAMSize
-	call DispStr
-	add esp,4
-	push dword [dwMemSize]
-	call DispInt
-	add esp,4
+	mov al,0x20					;主ICW2
+	out 0x21,al
+	call io_delay
 
+	mov al,0x28					;从ICW2
+	out 0xa1,al
+	call io_delay
 
-	pop ecx
-	pop esi
+	mov al,0x4 					;主ICW3
+	out 0x21,al
+	call io_delay
+
+	mov al,0x2 					;从ICW3
+	out 0xa1,al
+	call io_delay
+
+	mov al,0x1 					;主ICW4
+	out 0x21,al
+	call io_delay
+
+	out 0xa1,al 				;从ICW4
+	call io_delay
+
+	mov al,11111110b			;打开主8259A的时钟中断
+	out 0x21,al
+	call io_delay
+
+	mov al,11111111b			;屏蔽从8259A所有中断
+	out 0xa1,al
+	call io_delay
+
 	ret
 
-SetupPaging:
-	xor edx,edx
-	mov eax,[dwMemSize]
-	mov ebx,0x400000
-	div ebx
-	mov ecx,eax
-	test ebx,ebx
-	jz .1
-	inc ecx
-.1:
-;	初始化页目录
-	mov [PageTableNumber],ecx				;页表个数
-	mov ax,SelectorFlatRw
-	mov es,ax
-	mov edi,PageDirBase0
-	xor eax,eax
-	mov eax,PageTblBase0
-	or  eax,0x7
-.2:
-	stosd								
-	add eax,4096
-	loop .2
-;初始化页表
-	mov eax,[PageTableNumber]
-	mov ebx,1024
-	mul ebx
-	mov ecx,eax
-	mov edi,PageTblBase0
-	xor eax,eax
-	or eax,0x7
-.3:
-	stosd
-	add eax,4096
-	loop .3
-
-	mov eax,PageDirBase0
-	mov cr3,eax
-	mov	eax, cr0
-	or	eax, 80000000h
-	mov	cr0, eax
-.4:
-;	nop
-	ret
-
-PagingDemo:
-	mov ax,cs
-	mov ds,ax
-	mov ax,SelectorFlatRw
-	mov es,ax
-
-	push LenFoo
-	push offsetFoo
-	push ProcFoo
-	call MemCpy
-	add esp,12			;堆栈平衡
-
-
-	push LenBar
-	push offsetBar
-	push ProcBar
-	call MemCpy
-	add esp,12		
-
-	push LenPagingDemoProc
-	push offsetPagingDemoProc
-	push ProcPagingDemo
-	call MemCpy
-	add esp,12		
-
-	mov ax,SelectorData
-	mov ds,ax
-	mov es,ax
-
-	call SetupPaging
-	call SelectorFlatC:ProcPagingDemo
-	call PageSwitch
-	call SelectorFlatC:ProcPagingDemo
-	ret
-
-
-foo:
-offsetFoo		equ		foo - $$
+_SpuriousHandler:
+SpuriousHandler   equ  _SpuriousHandler - $$
 	mov ah,0xc
-	mov al,"F"
-	mov [gs:((80*17+0)*2)],ax
-	mov al,"o"
-	mov [gs:((80*17+1)*2)],ax
-	mov al,"o"
-	mov [gs:((80*17+2)*2)],ax
-	ret
-LenFoo		equ		$ - foo
+	mov al,"0"
+	mov [gs:((80*0+0)*2)],ax
+	iretd
 
-bar:
-offsetBar		equ		bar - $$
-	mov ah,0xc
-	mov al,"B"
-	mov [gs:((80*18+0)*2)],ax
-	mov al,"a"
-	mov [gs:((80*18+1)*2)],ax
-	mov al,"r"
-	mov [gs:((80*18+2)*2)],ax
-	ret
-LenBar		equ		$ - bar
-
-PagingDemoProc:
-offsetPagingDemoProc		equ		PagingDemoProc - $$
-	mov eax,LinearAddrDemo
-	call eax
-	retf
-LenPagingDemoProc		equ		$ - PagingDemoProc
-
-PageSwitch:
-	mov ecx,[PageTableNumber]
-	mov ax,SelectorFlatRw
-	mov es,ax
-	mov edi,PageDirBase1
-	xor eax,eax
-	mov eax,PageTblBase1
-	or  eax,0x7
-.1:
-	stosd
-	add eax,4096
-	loop .1
-
-	mov eax,[PageTableNumber]
-	xor edx,edx
-	mov ebx,1024
-	mul ebx
-	mov ecx,eax
-
-	mov edi,PageTblBase1
-	xor eax,eax
-	mov eax,0x7
-.2:
-	stosd
-	add eax,4096
-	loop .2
-
-	mov eax,LinearAddrDemo
-	shr eax,22					;取页表
-	mov ebx,4096
-	mul ebx						;页表地址
-	mov ecx,eax
-	mov eax,LinearAddrDemo
-	shr eax,12
-	and eax,0x3ff				;取页表偏移
-	mov ebx,4
-	mul ebx
-	add eax,ecx
-	add eax,PageTblBase1
-	mov dword [es:eax],	ProcBar|0x7
-
-	mov eax,PageDirBase1
-	mov cr3,eax
-;	jmp short .3
-.3:
-;	nop
-	ret
-
-
-
-
-
+_ClockHandler:
+ClockHandler equ  _ClockHandler - $$			;0-9循环
+	inc byte [gs:0]
+	mov al,0x20									;发送EOI
+	out 0x20,al
+	iretd
 	
 
-%include "lib.inc"
 
 Code32Len 		equ  $ - SEG_CODE32
