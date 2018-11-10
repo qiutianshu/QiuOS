@@ -1,5 +1,6 @@
 	org 0x100
 
+	times 512 nop
 	mov ax,0xb800
 	mov gs,ax
 	mov ah,0xc

@@ -25,6 +25,7 @@
 
 	wSectorNo			dw			0				;记录当前搜索扇区
 	wNumOfSector		dw			0
+	wNextDataBlock		dw			0
 
 	TopOfStack			equ			0x7c00
 	BaseOfLoader		equ			0x9000
@@ -105,28 +106,36 @@
 		call DispStr
 		add sp,2
 
-		mov ax,14									;0x7ced
+;		mov ax,14									;0x7ced
 		and di,0xffe0
 		add di,0x1a									;此条目对应的起始簇号
-		mov cx,[es:di]
-	;	push cx										;暂存起始扇区
-
-		add cx,ax
-		add cx,17									;cx存放逻辑扇区号
-
-LOAD_SECTOR:
+		mov cx,[es:di]								;0x7cf5
+		mov word [wNextDataBlock],OffsetOfLoader
+NEXT_DATA_BLOCK:
 		mov ah,0xe 
 		mov al,"."
 		mov bl,0xf 
 		int 10h
+
+		push cx										;暂存扇区
+		add cx,31
+;		add cx,17									;cx存放逻辑扇区号
 		mov ax,BaseOfLoader
 		mov es,ax
-		mov bx,OffsetOfLoader
+		mov bx,[wNextDataBlock]
 		mov ax,cx
 
 		mov cl,1									;读取数据区第一个扇区
-		call ReadSector								;0x7d12
+		call ReadSector								;0x7d17
+		pop ax
+		call SelectorNoOfFAT
+		cmp ax,0xff0
+		jnb LOAD_OK									;最后一个簇加载完毕
+		mov cx,ax
+		add word [wNextDataBlock],0x200
+		jmp NEXT_DATA_BLOCK
 
+LOAD_OK:
 		jmp BaseOfLoader:OffsetOfLoader
 
 ;ax存放逻辑扇区号，cl存放读取扇区数，es:bx指向缓冲区  
@@ -176,6 +185,56 @@ DispStr:
 	pop es
 	pop bp
 	ret
+
+;根据扇区号寻找FAT项的值，参数ax，返回值ax
+SelectorNoOfFAT:
+	push bp
+	mov bp,sp
+	sub sp,2
+	push es
+	push ax
+	mov ax,BaseOfLoader
+	sub ax,0x100
+	mov es,ax
+	pop ax
+
+	xor dx,dx
+	mov bx,3
+	mul bx
+	mov bx,2
+	div bx 							;ax->偏移，dx->余数
+	cmp dx,0
+	je EVEN
+	mov byte [bp-2],1					;奇
+	jmp NEXT
+EVEN:
+	mov byte [bp-2],0					;偶
+NEXT:
+	xor dx,dx
+	mov bx,512
+	div bx 							;ax->相对于FAT表的扇区号，dx->扇区内的偏移
+	push dx
+
+	add ax,1 						;加上第一个FAT表的扇区号
+	mov bx,0						;es:bx->(BaseOfLoader-0x100):0
+	mov cl,2						;读2个扇区
+	call ReadSector
+
+	pop dx
+	add bx,dx
+	mov ax,[es:bx]
+	cmp byte [bp-2],1
+	jnz EVEN2
+	shr ax,4
+EVEN2:
+	and ax,0xfff
+
+	pop es
+	add sp,2
+	pop bp
+	ret
+
+
 
 
 times 510-($-$$)		db        0
