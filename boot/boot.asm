@@ -2,26 +2,7 @@
 	jmp short LABEL_START
 	nop
 
-	;FAT12磁盘头
-	BS_OEMName			db			"QiuOS   "
-	BPB_BytsPerSec		dw			512
-	BPB_SecPerClus		db			1
-	BPB_RsvdSecCnt		dw			1
-	BPB_NumFATs			db			2
-	BPB_RootEntCnt		dw			224
-	BPB_TolSec16		dw			2880
-	BPB_Mdeia			db			0xf0
-	BPB_FATSz16			dw			9
-	BPB_SECPerTrk		dw			18
-	BPB_NumHeads		dw			2
-	BPB_HiddSec			dd			0
-	BPB_TolSec32		dd			0
-	BS_DrvNum			db			0
-	BS_Reservedl		db			0
-	BS_BootSig			db			0x29
-	BS_VolID			dd			0
-	BS_VolLab			db			"QiuOS_V0.01"
-	BS_FileSysType		db			"FAT12   "
+%include "fat12hdr.inc"
 
 	wSectorNo			dw			0				;记录当前搜索扇区
 	wNumOfSector		dw			0
@@ -41,7 +22,7 @@
 		mov ds,ax
 		mov es,ax
 		mov ss,ax
-		mov sp,TopOfStack
+		mov sp,TopOfStack-1
 
 		xor ah,ah			
 		xor dl,dl	
@@ -179,7 +160,7 @@ DispStr:
 	mov ax,0x1301
 	mov bx,0x0007
 	mov dx,0							;行列
-	mov bp,[bp+4]							;指向字符串的指针
+	mov bp,[bp+6]							;指向字符串的指针
 	int 10h
 
 	pop es
