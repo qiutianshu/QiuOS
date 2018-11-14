@@ -31,7 +31,7 @@ all:		clean everything bulidimg
 
 bulidimg:	
 			dd if=boot/boot.bin of=boot/a.img bs=512 count=1 conv=notrunc
-			sudo mount boot/a.img /mnt 
+			sudo mount a.img /mnt 
 			sudo cp boot/loader.bin /mnt
 			sudo cp kernel/kernel.bin /mnt
 			sudo umount /mnt
