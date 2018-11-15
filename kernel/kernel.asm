@@ -2,6 +2,7 @@ SELECTOR_KERNEL_CS		equ			0x18
 
 extern cstart						;导入函数
 extern exception_handler
+extern spurious_irq
 
 
 extern gdt_ptr						;导入全局变量
@@ -13,7 +14,9 @@ StackSpace			resb	2*1024
 StackTop:
 
 [SECTION .text]
-
+;---------------------------------------------------------------------
+;异常处理
+;---------------------------------------------------------------------
 global _start
 global divide_error
 global single_step_exception
@@ -32,6 +35,27 @@ global general_protection
 global page_fault
 global copr_error
 
+;---------------------------------------------------------------------
+;硬件中断
+;---------------------------------------------------------------------
+global hwint00						;0号中断
+global hwint01
+global hwint02
+global hwint03
+global hwint04
+global hwint05
+global hwint06
+global hwint07
+global hwint08
+global hwint09
+global hwint10
+global hwint11
+global hwint12
+global hwint13
+global hwint14
+global hwint15
+
+
 _start:
 	mov esp,StackTop
 	mov dword [disp_pos],0
@@ -43,11 +67,7 @@ _start:
 	jmp SELECTOR_KERNEL_CS:csinit
 
 csinit:
-	;ud2
-	jmp 0x40:0
-	push 0
-	popfd
-
+	sti
 	hlt
 
 divide_error:
@@ -125,7 +145,79 @@ copr_error:
 	jmp exception
 
 
+;---------------------------------------------------------------------------
+;中断处理
+;---------------------------------------------------------------------------
+hwint00:
+	push 0		
+	jmp hwint			
+
+hwint01:
+	push 1		
+	jmp hwint
+
+hwint02:
+	push 2		
+	jmp hwint
+
+hwint03:
+	push 3		
+	jmp hwint
+
+hwint04:
+	push 4		
+	jmp hwint
+
+hwint05:
+	push 5		
+	jmp hwint
+
+hwint06:
+	push 6		
+	jmp hwint
+
+hwint07:
+	push 7		
+	jmp hwint
+
+hwint08:
+	push 8		
+	jmp hwint
+
+hwint09:
+	push 9		
+	jmp hwint
+
+hwint10:
+	push 10		
+	jmp hwint
+
+hwint11:
+	push 11		
+	jmp hwint
+
+hwint12:
+	push 12		
+	jmp hwint
+
+hwint13:
+	push 13		
+	jmp hwint
+
+hwint14:
+	push 14		
+	jmp hwint
+
+hwint15:
+	push 15		
+	jmp hwint
+
 exception:
 	call exception_handler
 	add esp,8						;栈顶指向eip
+	hlt
+
+hwint:
+	call spurious_irq
+	add esp,4
 	hlt

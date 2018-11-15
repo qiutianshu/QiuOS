@@ -7,7 +7,7 @@
 
 PUBLIC void cstart(){
 	disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	disp_str("--------------cstart--------------\n");
+	disp_str("--------------Setup interrupt and exception--------------\n");
 
 	memcpy(&gdt,(void*)(*((u32*)(&gdt_ptr[2]))),*((u16*)(&gdt_ptr[0]))+1);				//复制GDT
 
@@ -18,5 +18,5 @@ PUBLIC void cstart(){
 	*((u32*)(&idt_ptr[2])) = (u32)&idt;
 
 	init_prot();
-	disp_str("------------------cstart end--------------\n");
+	disp_str("--------------       Setup done!    --------------\n");
 }
