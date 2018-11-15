@@ -1,22 +1,22 @@
 #include "const.h"
 #include "type.h"
 #include "protect.h"
-
-PUBLIC	void memcpy(void *Dest,void *Src,int size);
-
-PUBLIC	disp_str(char *str);
-
-PUBLIC	Descriptor	gdt[GDT_SIZE];
-
-PUBLIC	u8	gdt_ptr[6];
-
+#include "proto.h"
+#include "global.h"
+	
 
 PUBLIC void cstart(){
 	disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	disp_str("--------------cstart--------------\n");
 
-	memcpy(&gdt,(void*)(*((u32*)(&gdt_ptr[2]))),*((u16*)(&gdt_ptr[0]))+1);
+	memcpy(&gdt,(void*)(*((u32*)(&gdt_ptr[2]))),*((u16*)(&gdt_ptr[0]))+1);				//复制GDT
 
 	*((u16*)(&gdt_ptr[0])) = GDT_SIZE * sizeof(Descriptor) - 1;
 	*((u32*)(&gdt_ptr[2])) = (u32)&gdt;
+
+	*((u16*)(&idt_ptr[0])) = IDT_SIZE * sizeof(Gate) - 1;								//设置idtr
+	*((u32*)(&idt_ptr[2])) = (u32)&idt;
+
+	init_prot();
+	disp_str("------------------cstart end--------------\n");
 }
