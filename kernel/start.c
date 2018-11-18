@@ -1,6 +1,7 @@
 #include "const.h"
 #include "type.h"
 #include "protect.h"
+#include "proc.h"
 #include "proto.h"
 #include "global.h"
 	

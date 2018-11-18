@@ -6,6 +6,7 @@ global disp_str
 global disp_color_str
 global memcpy
 global out_byte
+global memset
 ;--------------------------------------------------------------------------------------
 ;				void disp_str(char* str)
 ;--------------------------------------------------------------------------------------
@@ -131,3 +132,29 @@ out_byte:
 	nop
 	ret
 
+;-------------------------------------------------------------------------------------------
+;	void memset(void* dest,char chr,int size)
+;-------------------------------------------------------------------------------------------
+memset:
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edi
+	push ebx
+
+	mov ecx,[ebp+12]		;size
+	mov ebx,[ebp+8]			;char
+	mov edi,[ebp+4]			;dest
+.1:
+	cmp ecx,0
+	je .2
+	mov byte [edi],bl
+	inc edi
+	dec ecx
+	jmp .1
+.2:
+	pop ebx
+	pop edi
+	pop ecx
+	pop ebp
+	ret

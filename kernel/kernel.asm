@@ -1,13 +1,19 @@
+
+%include "sconst.inc"
+
 SELECTOR_KERNEL_CS		equ			0x18
+SELECTOR_TSS			equ			0x20
 
 extern cstart						;导入函数
 extern exception_handler
 extern spurious_irq
-
+extern kernel_main
 
 extern gdt_ptr						;导入全局变量
 extern idt_ptr
 extern disp_pos
+extern tss
+extern p_proc_ready
 
 [SECTION .bss]
 StackSpace			resb	2*1024
@@ -55,6 +61,7 @@ global hwint13
 global hwint14
 global hwint15
 
+global restart
 
 _start:
 	mov esp,StackTop
@@ -67,8 +74,13 @@ _start:
 	jmp SELECTOR_KERNEL_CS:csinit
 
 csinit:
-	sti
-	hlt
+	
+	xor	eax, eax
+	mov	ax, SELECTOR_TSS
+	ltr	ax
+	jmp kernel_main
+
+
 
 divide_error:
 	push 0xffffffff					;没有错误码
@@ -149,8 +161,9 @@ copr_error:
 ;中断处理
 ;---------------------------------------------------------------------------
 hwint00:
-	push 0		
-	jmp hwint			
+	iret
+	;push 0		
+	;jmp hwint			
 
 hwint01:
 	push 1		
@@ -221,3 +234,20 @@ hwint:
 	call spurious_irq
 	add esp,4
 	hlt
+
+
+restart:
+	mov esp,[p_proc_ready]
+	lldt [esp+P_LDT_SEL]
+	lea eax,[esp+P_STACKTOP]
+	mov dword [tss+TSS_S_SP0],eax
+;	pop eax
+;	jmp $
+	pop	gs
+	pop	fs
+	pop	es
+	pop	ds
+	popad
+
+	add	esp, 4
+	iretd

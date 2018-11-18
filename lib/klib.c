@@ -16,7 +16,7 @@ PUBLIC char* atoi(char* str,int num){
 		if(ch<0xa)
 			ch += '0';
 		else
-			ch += ch-0xa+'a';
+			ch = ch-0xa+'a';
 
 		*p++ = ch; 
 	}
@@ -29,4 +29,13 @@ PUBLIC void disp_int(int input){
 	char output[16];
 	atoi(output,input);
 	disp_str(output);
+}
+
+PUBLIC void delay(int time){
+	int i,j,k;
+	for(k = 0; k < time; k++){
+		for(i = 0; i <10; i++){
+			for(j = 0; j < 10000; j++){}
+		}
+	}
 }

@@ -1,11 +1,10 @@
 /*
 protect.h文件设置了保护模式下的参数
 */
-
-
-
 #ifndef _QIUOS_PROTECT_H_
 #define _QIUOS_PROTECT_H_
+
+#define vir2phys(seg_base,vir) (u32)(((u32)seg_base)+(u32)(vir))
 
 //段描述符
 typedef struct descriptor{
@@ -16,8 +15,6 @@ typedef struct descriptor{
 	u8	limit_high_attr2;	/* G(1) D(1) 0(1) AVL(1) LimitHigh(4) */
 	u8	base_high;		/* Base */
 }Descriptor;
-
-//门描述符
 
 /*说明:
 
@@ -65,6 +62,36 @@ typedef struct s_gate
 	u16	offset_high;	/* Offset High */
 }Gate;
 
+typedef struct s_tss{
+	u32 backlink;
+	u32 esp0;
+	u32 ss0;
+	u32 esp1;
+	u32 ss1;
+	u32 esp2;
+	u32 ss2;
+	u32 cr3;
+	u32 eip;
+	u32 flags;
+	u32 eax;
+	u32 ecx;
+	u32 edx;
+	u32 ebx;
+	u32 esp;
+	u32 ebp;
+	u32 esi;
+	u32 edi;
+	u32 es;
+	u32 cs;
+	u32 ss;
+	u32 ds;
+	u32 fs;
+	u32 gs;
+	u32 ldt;
+	u16 trap;
+	u16 iobase;
+}TSS;
+
 
 //权限
 #define PRIVILEGE_KERNEL	0				//ring0级
@@ -75,5 +102,18 @@ typedef struct s_gate
 
 #define GDT_SIZE 128						//全局描述符数量
 #define IDT_SIZE 256						//中断门数量
+#define LDT_SIZE 2
+
+
+#define SELECTOR_DUMMY		0
+#define SELECTOR_VIDEO		0x8 + 3			//rpl=3
+#define SELECTOR_FLAT_RW	0x10
+#define SELECTOR_FLAT_C		0x18
+#define SELECTOR_TSS 		0x20
+#define SELECTOR_LDT_FIRST	0x28
+
+#define SELECTOR_KERNEL_CS	SELECTOR_FLAT_C
+#define SELECTOR_KERNEL_DS	SELECTOR_FLAT_RW
+#define SELECTOR_KERNEL_GS	SELECTOR_VIDEO
 
 #endif

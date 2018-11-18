@@ -1,5 +1,6 @@
 #include "type.h"
 #include "protect.h"
+#include "proc.h"
 #include "const.h"
 #include "proto.h"
 #include "global.h"
@@ -121,59 +122,40 @@ PRIVATE void init_idt_desc(u8 vector,u8 desc_type,int_handler handler,u8 privile
 	p_gate->offset_high = (offset>>16) & 0xffff;
 }
 
-/*
-#define	INT_VECTOR_DIVIDE			0x0
-#define	INT_VECTOR_DEBUG			0x1
-#define	INT_VECTOR_NMI				0x2
-#define	INT_VECTOR_BREAKPOINT		0x3
-#define	INT_VECTOR_OVERFLOW			0x4
-#define	INT_VECTOR_BOUNDS			0x5
-#define	INT_VECTOR_INVAL_OP			0x6
-#define	INT_VECTOR_COPROC_NOT		0x7
-#define	INT_VECTOR_DOUBLE_FAULT		0x8
-#define	INT_VECTOR_COPROC_SEG		0x9
-#define	INT_VECTOR_INVAL_TSS		0xA
-#define	INT_VECTOR_SEG_NOT			0xB
-#define	INT_VECTOR_STACK_FAULT		0xC
-#define	INT_VECTOR_PROTECTION		0xD
-#define	INT_VECTOR_PAGE_FAULT		0xE
-#define	INT_VECTOR_COPROC_ERR		0x10
-*/
+PRIVATE void init_descriptor(Descriptor* desc, u32 base, u32 limit,u16 attribute){
+	desc->limit_low = limit & 0xffff;
+	desc->base_low = base & 0xffff;
+	desc->base_mid = (base>>16) & 0xff;
+	desc->attr1 = attribute & 0xff;
+	desc->limit_high_attr2 = ((limit>>16)&0xf) | (attribute >> 8) & 0xf0;
+	desc->base_high = (base >> 24) & 0xff;
+}
+
+PUBLIC u32 seg2phys(u16 seg){
+	Descriptor* p_desc = &gdt[seg>>3];
+	return (p_desc->base_high<<24 | p_desc->base_mid << 16 | p_desc->base_low);
+}
+
 
 PUBLIC void init_prot(){
 	init_8259A();
 
 //初始化中断门
 	init_idt_desc(INT_VECTOR_DIVIDE, DA_386IGATE, divide_error, PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_DEBUG,DA_386IGATE,single_step_exception,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_NMI,DA_386IGATE,nmi,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_BREAKPOINT,DA_386IGATE,breakpoint_exception,PRIVILEGE_USER);
-
 	init_idt_desc(INT_VECTOR_OVERFLOW,DA_386IGATE,overflow,PRIVILEGE_USER);
-
 	init_idt_desc(INT_VECTOR_BOUNDS,DA_386IGATE,bounds_check,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_INVAL_OP,DA_386IGATE,inval_opcode,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_COPROC_NOT,DA_386IGATE,copr_not_available,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_DOUBLE_FAULT,DA_386IGATE,double_fault,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_COPROC_SEG,DA_386IGATE,copr_seg_overrun,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_INVAL_TSS,DA_386IGATE,inval_tss,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_SEG_NOT,DA_386IGATE,segment_not_present,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_STACK_FAULT,DA_386IGATE,stack_exception,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_PROTECTION,DA_386IGATE,general_protection,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_PAGE_FAULT,DA_386IGATE,page_fault,PRIVILEGE_KERNEL);
-
 	init_idt_desc(INT_VECTOR_COPROC_ERR,DA_386IGATE,copr_error,PRIVILEGE_KERNEL);
 
 	//硬件中断
@@ -193,6 +175,13 @@ PUBLIC void init_prot(){
 	init_idt_desc(IRQ8 + 5,DA_386IGATE,hwint13,PRIVILEGE_KERNEL);
 	init_idt_desc(IRQ8 + 6,DA_386IGATE,hwint14,PRIVILEGE_KERNEL);
 	init_idt_desc(IRQ8 + 7,DA_386IGATE,hwint15,PRIVILEGE_KERNEL);
+
+	memset(&tss, 0, sizeof(tss));
+	tss.ss0 = SELECTOR_KERNEL_DS;
+	init_descriptor(&gdt[INDEX_TSS],vir2phys(seg2phys(SELECTOR_KERNEL_DS),&tss),sizeof(tss)-1,DA_386TSS);
+	tss.iobase = sizeof(tss);
+	init_descriptor(&gdt[INDEX_LDT_FIRST],vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[0].ldts),LDT_SIZE * sizeof(Descriptor) - 1,DA_LDT);
+
 }
 
 /*
