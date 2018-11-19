@@ -6,11 +6,12 @@
 #define EXTERN	extern 
 
 
-//8259端口
+//8259A 设置相关
 #define INT_M_CTL 			0x20
 #define	INT_M_CTLMASK		0x21
 #define INT_S_CTL			0xa0
 #define	INT_S_CTLMASK		0xa1
+#define EOI                 0x20    
 
 #define IRQ0				0x20
 #define	IRQ8				0x28

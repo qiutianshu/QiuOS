@@ -20,5 +20,10 @@ SSREG		equ	ESPREG		+ 4
 P_STACKTOP	equ	SSREG		+ 4
 P_LDT_SEL	equ	P_STACKTOP
 P_LDT		equ	P_LDT_SEL	+ 4
-
+EOI         equ             0x20
 TSS_S_SP0	equ	4
+
+INT_M_CTL       equ     0x20
+INT_M_CTLMASK   equ     0x21
+INT_S_CTL	    equ     0xa0
+INT_S_CTLMASK	equ     0xa1

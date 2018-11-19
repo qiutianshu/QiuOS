@@ -17,6 +17,6 @@ void init_8259A(){
 	out_byte(INT_M_CTLMASK,0x1);		//ICW4
 	out_byte(INT_S_CTLMASK,0X1);		
 
-	out_byte(INT_M_CTLMASK,0xfd);		//OCW1      开启1号中断
+	out_byte(INT_M_CTLMASK,0xfe);		//OCW1      开启0号中断
 	out_byte(INT_S_CTLMASK,0xff);
 }

@@ -8,16 +8,22 @@ extern cstart						;导入函数
 extern exception_handler
 extern spurious_irq
 extern kernel_main
+extern disp_str
+extern delay
 
 extern gdt_ptr						;导入全局变量
 extern idt_ptr
 extern disp_pos
 extern tss
 extern p_proc_ready
+extern k_reenter
 
 [SECTION .bss]
-StackSpace			resb	2*1024
+StackSpace			resb	2*1024	;内核栈(基地址0x8000)，加载时分配空间
 StackTop:
+
+[SECTION .data]
+clock_int_msg			db 			"^"
 
 [SECTION .text]
 ;---------------------------------------------------------------------
@@ -78,6 +84,7 @@ csinit:
 	xor	eax, eax
 	mov	ax, SELECTOR_TSS
 	ltr	ax
+	sti 
 	jmp kernel_main
 
 
@@ -161,9 +168,54 @@ copr_error:
 ;中断处理
 ;---------------------------------------------------------------------------
 hwint00:
-	iret
-	;push 0		
-	;jmp hwint			
+	sub esp,4
+	pushad
+	push ds
+	push es
+	push fs
+	push gs
+	mov dx,ss 
+	mov ds,dx
+	mov es,dx
+
+	inc byte [gs:0]
+
+	mov al,EOI					;发送EOI
+	out INT_M_CTL,al
+
+	inc dword [k_reenter]
+	cmp dword [k_reenter],0
+	jne .exit 
+
+	mov esp,StackTop			;切换到内核栈
+	sti 						;此时的中断已经转移到内核栈中
+
+	push clock_int_msg
+	call disp_str
+	add esp,4
+
+	push 1
+	call delay
+	add esp,4
+
+	cli 
+
+	mov esp,[p_proc_ready]		;离开内核栈
+
+	lea eax,[esp+P_STACKTOP]
+	mov dword [tss+TSS_S_SP0],eax
+
+.exit:
+	dec dword [k_reenter]
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	popad
+	add esp,4
+
+	iretd
+			
 
 hwint01:
 	push 1		
@@ -241,8 +293,6 @@ restart:
 	lldt [esp+P_LDT_SEL]
 	lea eax,[esp+P_STACKTOP]
 	mov dword [tss+TSS_S_SP0],eax
-;	pop eax
-;	jmp $
 	pop	gs
 	pop	fs
 	pop	es
