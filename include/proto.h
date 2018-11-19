@@ -9,4 +9,8 @@ PUBLIC void memcpy(void *Dest,void *Src,int size);
 PUBLIC void init_8259A();
 PUBLIC void delay();
 PUBLIC void TestA();
+PUBLIC void TestB();
+PUBLIC void TestC();
 PUBLIC void memset(void* dest,char chr,int size);
+PUBLIC void strcpy(void* dest, void* src);
+PUBLIC void clock_handler();

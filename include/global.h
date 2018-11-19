@@ -20,3 +20,5 @@ EXTERN PROCESS* p_proc_ready;
 EXTERN TSS tss;
 EXTERN char task_stack[STACK_SIZE_TOTAL];
 EXTERN int k_reenter;
+
+extern TASK task_table[];

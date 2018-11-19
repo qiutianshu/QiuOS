@@ -35,8 +35,12 @@
 #define	INT_VECTOR_COPROC_ERR		0x10
 
 //进程相关常量
-#define NR_TASKS					1		//进程数量
-#define STACK_SIZE_TOTAL			0x8000
+#define NR_TASKS					3		//进程数量
+
+#define STACK_SIZE_TESTA            0x8000
+#define STACK_SIZE_TESTB            0x8000
+#define STACK_SIZE_TESTC            0x8000
+#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+STACK_SIZE_TESTB+STACK_SIZE_TESTC)
 
 //描述符相关常量
 #define DA_32	0x4000				//32位段

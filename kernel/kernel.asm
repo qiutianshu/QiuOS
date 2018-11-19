@@ -10,6 +10,7 @@ extern spurious_irq
 extern kernel_main
 extern disp_str
 extern delay
+extern clock_handler
 
 extern gdt_ptr						;导入全局变量
 extern idt_ptr
@@ -84,7 +85,6 @@ csinit:
 	xor	eax, eax
 	mov	ax, SELECTOR_TSS
 	ltr	ax
-	sti 
 	jmp kernel_main
 
 
@@ -168,7 +168,7 @@ copr_error:
 ;中断处理
 ;---------------------------------------------------------------------------
 hwint00:
-	sub esp,4
+	sub esp,4					;切换到进程表中
 	pushad
 	push ds
 	push es
@@ -177,8 +177,6 @@ hwint00:
 	mov dx,ss 
 	mov ds,dx
 	mov es,dx
-
-	inc byte [gs:0]
 
 	mov al,EOI					;发送EOI
 	out INT_M_CTL,al
@@ -189,19 +187,11 @@ hwint00:
 
 	mov esp,StackTop			;切换到内核栈
 	sti 						;此时的中断已经转移到内核栈中
-
-	push clock_int_msg
-	call disp_str
-	add esp,4
-
-	push 1
-	call delay
-	add esp,4
-
+	call clock_handler
 	cli 
 
 	mov esp,[p_proc_ready]		;离开内核栈
-
+	lldt [esp+P_LDT_SEL]		;重新设置LDT
 	lea eax,[esp+P_STACKTOP]
 	mov dword [tss+TSS_S_SP0],eax
 

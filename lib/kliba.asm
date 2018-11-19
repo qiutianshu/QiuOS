@@ -7,6 +7,7 @@ global disp_color_str
 global memcpy
 global out_byte
 global memset
+global strcpy
 ;--------------------------------------------------------------------------------------
 ;				void disp_str(char* str)
 ;--------------------------------------------------------------------------------------
@@ -156,5 +157,25 @@ memset:
 	pop ebx
 	pop edi
 	pop ecx
+	pop ebp
+	ret
+
+;-----------------------------------------------------------------------------------------------
+;	void strcpy(void* dest, void* src)
+;-----------------------------------------------------------------------------------------------
+strcpy:
+	push ebp
+	mov ebp,esp
+
+	mov esi,[ebp+12]
+	mov edi,[ebp+8]
+.1:
+	mov al,[esi]
+	mov byte [edi],al
+	inc esi
+	inc edi
+	cmp al,0
+	jne .1					;不为 ‘\0’
+
 	pop ebp
 	ret

@@ -180,7 +180,19 @@ PUBLIC void init_prot(){
 	tss.ss0 = SELECTOR_KERNEL_DS;
 	init_descriptor(&gdt[INDEX_TSS],vir2phys(seg2phys(SELECTOR_KERNEL_DS),&tss),sizeof(tss)-1,DA_386TSS);
 	tss.iobase = sizeof(tss);
-	init_descriptor(&gdt[INDEX_LDT_FIRST],vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[0].ldts),LDT_SIZE * sizeof(Descriptor) - 1,DA_LDT);
+
+	int i;
+	PROCESS* p_proc = proc_table;
+	u16 selector_ldt = SELECTOR_LDT_FIRST >> 3;						//SELECTOR_LDT_FIRST / 8
+	for(i=0; i<NR_TASKS; i++){
+		init_descriptor(&gdt[selector_ldt],
+						vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts),
+						LDT_SIZE * sizeof(Descriptor) - 1,
+						DA_LDT);
+		p_proc++;
+		selector_ldt++;
+	}
+	
 
 }
 
