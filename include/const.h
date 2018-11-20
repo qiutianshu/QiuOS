@@ -16,6 +16,8 @@
 #define IRQ0				0x20
 #define	IRQ8				0x28
 
+#define NR_IRQ				0x10			//中断数量
+
 //中断向量
 #define	INT_VECTOR_DIVIDE			0x0
 #define	INT_VECTOR_DEBUG			0x1
@@ -33,6 +35,8 @@
 #define	INT_VECTOR_PROTECTION		0xD
 #define	INT_VECTOR_PAGE_FAULT		0xE
 #define	INT_VECTOR_COPROC_ERR		0x10
+
+#define CLOCK_IRQ					0x0
 
 //进程相关常量
 #define NR_TASKS					3		//进程数量

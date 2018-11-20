@@ -39,3 +39,17 @@ PUBLIC void delay(int time){
 		}
 	}
 }
+
+PUBLIC void disable_irq(int irq){
+	if(irq<8)
+		out_byte(INT_M_CTLMASK, in_byte(INT_M_CTLMASK)|(1<<irq));
+	else
+		out_byte(INT_S_CTLMASK, in_byte(INT_S_CTLMASK)|(1<<(irq % 8)));
+}
+
+PUBLIC void enable_irq(int irq){
+	if(irq<8)
+		out_byte(INT_M_CTLMASK,in_byte(INT_M_CTLMASK)&(0xff-(1<<irq)));
+	else
+		out_byte(INT_S_CTLMASK,in_byte(INT_S_CTLMASK)&(0xff-(1<<(irq%8))));
+}

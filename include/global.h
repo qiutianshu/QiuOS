@@ -22,3 +22,4 @@ EXTERN char task_stack[STACK_SIZE_TOTAL];
 EXTERN int k_reenter;
 
 extern TASK task_table[];
+extern irq_handler irq_table[];

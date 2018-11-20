@@ -18,6 +18,7 @@ extern disp_pos
 extern tss
 extern p_proc_ready
 extern k_reenter
+extern irq_table
 
 [SECTION .bss]
 StackSpace			resb	2*1024	;内核栈(基地址0x8000)，加载时分配空间
@@ -167,105 +168,71 @@ copr_error:
 ;---------------------------------------------------------------------------
 ;中断处理
 ;---------------------------------------------------------------------------
-hwint00:
-	sub esp,4					;切换到进程表中
-	pushad
-	push ds
-	push es
-	push fs
-	push gs
-	mov dx,ss 
-	mov ds,dx
-	mov es,dx
-
+%macro hwint_master		1
+	call save
+	in al,INT_M_CTLMASK
+	or al,(1 << %1)				;屏蔽当前中断，不发生同类型中断
+	out INT_M_CTLMASK,al
 	mov al,EOI					;发送EOI
 	out INT_M_CTL,al
-
-	inc dword [k_reenter]
-	cmp dword [k_reenter],0
-	jne .exit 
-
-	mov esp,StackTop			;切换到内核栈
-	sti 						;此时的中断已经转移到内核栈中
-	call clock_handler
+	sti 				
+	push %1		
+	call [irq_table + 4 * %1]	;中断处理
+	add esp,4 
 	cli 
+	in al,INT_M_CTLMASK
+	and al,0xff-(1 << %1)		;恢复当前中断
+	out INT_M_CTLMASK,al
+	ret 
+%endmacro
 
-	mov esp,[p_proc_ready]		;离开内核栈
-	lldt [esp+P_LDT_SEL]		;重新设置LDT
-	lea eax,[esp+P_STACKTOP]
-	mov dword [tss+TSS_S_SP0],eax
-
-.exit:
-	dec dword [k_reenter]
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	popad
-	add esp,4
-
-	iretd
-			
-
+hwint00:
+	hwint_master	0
+	
 hwint01:
-	push 1		
-	jmp hwint
+	hwint_master	1
 
 hwint02:
-	push 2		
-	jmp hwint
+	hwint_master	2
 
 hwint03:
-	push 3		
-	jmp hwint
+	hwint_master	3
 
 hwint04:
-	push 4		
-	jmp hwint
+	hwint_master	4
 
 hwint05:
-	push 5		
-	jmp hwint
+	hwint_master	5
 
 hwint06:
-	push 6		
-	jmp hwint
+	hwint_master	6
 
 hwint07:
-	push 7		
-	jmp hwint
+	hwint_master	7
 
 hwint08:
-	push 8		
-	jmp hwint
+	hwint_master	8
 
 hwint09:
-	push 9		
-	jmp hwint
+	hwint_master	9
 
 hwint10:
-	push 10		
-	jmp hwint
+	hwint_master	10
 
 hwint11:
-	push 11		
-	jmp hwint
+	hwint_master	11
 
 hwint12:
-	push 12		
-	jmp hwint
+	hwint_master	12
 
 hwint13:
-	push 13		
-	jmp hwint
+	hwint_master	13
 
 hwint14:
-	push 14		
-	jmp hwint
+	hwint_master	14
 
 hwint15:
-	push 15		
-	jmp hwint
+	hwint_master	15
 
 exception:
 	call exception_handler
@@ -283,6 +250,9 @@ restart:
 	lldt [esp+P_LDT_SEL]
 	lea eax,[esp+P_STACKTOP]
 	mov dword [tss+TSS_S_SP0],eax
+
+restart_reenter:
+	dec dword [k_reenter]
 	pop	gs
 	pop	fs
 	pop	es
@@ -291,3 +261,24 @@ restart:
 
 	add	esp, 4
 	iretd
+
+save:
+	pushad
+	push ds
+	push es
+	push fs
+	push gs
+	mov dx,ss 
+	mov ds,dx
+	mov es,dx
+
+	mov eax,esp
+	inc dword [k_reenter]
+	cmp dword [k_reenter],0
+	jne .reenter 
+	mov esp,StackTop 						;进入内核栈
+	push restart
+	jmp [eax + RETADR - P_STACKBASE]		;返回到call的下一条指令
+.reenter:
+	push restart_reenter
+	jmp [eax + RETADR - P_STACKBASE]

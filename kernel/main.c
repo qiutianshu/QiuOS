@@ -39,8 +39,10 @@ PUBLIC int kernel_main(){
 		p_task++;
 		selector_ldt +=1 << 3;
 	}
-	
-	k_reenter = -1;
+	put_irq_handler(CLOCK_IRQ,clock_handler);
+	enable_irq(CLOCK_IRQ);
+
+	k_reenter = 0;
 	p_proc_ready = proc_table;
 	restart();
 	while(1){}
