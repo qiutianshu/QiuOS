@@ -12,6 +12,7 @@ extern disp_str
 extern delay
 extern clock_handler
 
+
 extern gdt_ptr						;导入全局变量
 extern idt_ptr
 extern disp_pos
@@ -19,6 +20,7 @@ extern tss
 extern p_proc_ready
 extern k_reenter
 extern irq_table
+extern sys_call_table
 
 [SECTION .bss]
 StackSpace			resb	2*1024	;内核栈(基地址0x8000)，加载时分配空间
@@ -48,6 +50,7 @@ global stack_exception
 global general_protection
 global page_fault
 global copr_error
+global sys_call
 
 ;---------------------------------------------------------------------
 ;硬件中断
@@ -272,13 +275,21 @@ save:
 	mov ds,dx
 	mov es,dx
 
-	mov eax,esp
+	mov esi,esp
 	inc dword [k_reenter]
 	cmp dword [k_reenter],0
 	jne .reenter 
 	mov esp,StackTop 						;进入内核栈
 	push restart
-	jmp [eax + RETADR - P_STACKBASE]		;返回到call的下一条指令
+	jmp [esi + RETADR - P_STACKBASE]		;返回到call的下一条指令
 .reenter:
 	push restart_reenter
-	jmp [eax + RETADR - P_STACKBASE]
+	jmp [esi + RETADR - P_STACKBASE]
+
+sys_call:
+	call save
+	sti
+	call [sys_call_table + eax * 4]
+	mov [esi + EAXREG - P_STACKBASE],eax 	;压入返回值
+	cli
+	ret

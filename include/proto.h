@@ -18,3 +18,10 @@ PUBLIC void clock_handler();
 PUBLIC void disable_irq(int irq);
 PUBLIC void enable_irq(int irq);
 PUBLIC void put_irq_handler(int irq, irq_handler handler);
+PUBLIC void milli_delay(int milli_sec);	//毫秒延时函数
+
+
+/*   以下是系统调用相关		*/
+PUBLIC void sys_call();
+PUBLIC int get_ticks();					//用户调用接口
+PUBLIC int sys_get_ticks();				//中断处理例程

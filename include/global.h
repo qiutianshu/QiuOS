@@ -20,6 +20,8 @@ EXTERN PROCESS* p_proc_ready;
 EXTERN TSS tss;
 EXTERN char task_stack[STACK_SIZE_TOTAL];
 EXTERN int k_reenter;
+EXTERN int ticks;
 
 extern TASK task_table[];
 extern irq_handler irq_table[];
+extern system_call sys_call_table[];

@@ -4,6 +4,29 @@
 #define PUBLIC 
 #define PRIVATE static
 #define EXTERN	extern 
+/*
+	8253端口说明
+	0x40    Count0   输出到IRQ0，每隔一定时间产生时钟中断
+	0x41	Count1	 通常设为18，每隔15us刷新RAM
+	0x42	Count2	 连接喇叭
+	0x43 	Mode Control Register
+
+	模式控制寄存器：
+	计数器选择位  bit7、bit6 
+	读写锁位		bit5、bit4
+	计数器模式位	bit3、bit2、bit1
+	0=计数器使用二进制位，1=使用BCD码
+
+*/
+
+
+//8253设置相关
+#define TIMER0				0x40 
+#define TIMER_MODE 			0x43
+#define RATE_GENERATOR		0x34 			//00 11 010 0
+
+#define TIMER_FREQ			1193182L		//时钟震荡频率
+#define HZ					100				//时钟中断频率 intval = TIMMER_FREQ / HZ
 
 
 //8259A 设置相关
@@ -17,6 +40,7 @@
 #define	IRQ8				0x28
 
 #define NR_IRQ				0x10			//中断数量
+#define NR_SYS_CALL			0x10			//系统调用数量
 
 //中断向量
 #define	INT_VECTOR_DIVIDE			0x0
@@ -35,6 +59,8 @@
 #define	INT_VECTOR_PROTECTION		0xD
 #define	INT_VECTOR_PAGE_FAULT		0xE
 #define	INT_VECTOR_COPROC_ERR		0x10
+#define INT_VECTOR_SYS_CALL			0x90
+
 
 #define CLOCK_IRQ					0x0
 
@@ -90,7 +116,5 @@
 #define INDEX_FLAT_C	3
 #define INDEX_TSS		4
 #define INDEX_LDT_FIRST	5
-
-
 
 #endif

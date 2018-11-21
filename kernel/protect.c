@@ -111,7 +111,9 @@ typedef struct s_gate
 //	u16	offset_high;	/* Offset High */
 //}Gate;
 //*/
-
+/*
+	初始化中断描述符
+*/
 PRIVATE void init_idt_desc(u8 vector,u8 desc_type,int_handler handler,u8 privilege){
 	Gate * p_gate = &idt[vector];
 	u32 offset = (u32)handler;
@@ -122,6 +124,9 @@ PRIVATE void init_idt_desc(u8 vector,u8 desc_type,int_handler handler,u8 privile
 	p_gate->offset_high = (offset>>16) & 0xffff;
 }
 
+/*
+	初始化全局（局部）描述符
+*/
 PRIVATE void init_descriptor(Descriptor* desc, u32 base, u32 limit,u16 attribute){
 	desc->limit_low = limit & 0xffff;
 	desc->base_low = base & 0xffff;
@@ -175,6 +180,7 @@ PUBLIC void init_prot(){
 	init_idt_desc(IRQ8 + 5,DA_386IGATE,hwint13,PRIVILEGE_KERNEL);
 	init_idt_desc(IRQ8 + 6,DA_386IGATE,hwint14,PRIVILEGE_KERNEL);
 	init_idt_desc(IRQ8 + 7,DA_386IGATE,hwint15,PRIVILEGE_KERNEL);
+	init_idt_desc(INT_VECTOR_SYS_CALL,DA_386IGATE,sys_call,PRIVILEGE_USER);			//系统调用
 
 	memset(&tss, 0, sizeof(tss));
 	tss.ss0 = SELECTOR_KERNEL_DS;
