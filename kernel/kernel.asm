@@ -172,7 +172,7 @@ copr_error:
 ;中断处理
 ;---------------------------------------------------------------------------
 %macro hwint_master		1
-	call save
+	call save					;当前EOI未发送，不可能有时钟中断
 	in al,INT_M_CTLMASK
 	or al,(1 << %1)				;屏蔽当前中断，不发生同类型中断
 	out INT_M_CTLMASK,al

@@ -14,6 +14,7 @@ PUBLIC int kernel_main(){
 	char*		p_task_stack	= task_stack + STACK_SIZE_TOTAL;
 	u16			selector_ldt 	= SELECTOR_LDT_FIRST;
 	int i;
+
 	for(i=0; i<NR_TASKS; i++){
 		strcpy(p_proc->p_name,p_task->name);		//进程名
 		p_proc->pid = i;							//进程号
@@ -32,7 +33,7 @@ PUBLIC int kernel_main(){
 		p_proc->regs.gs = (SELECTOR_KERNEL_GS & 0xfffc) | SA_RPL1;
 		p_proc->regs.eip = (u32)p_task->init_eip;
 		p_proc->regs.esp = (u32)p_task_stack;
-		p_proc->regs.eflags = 0x1202;
+		p_proc->regs.eflags = 0x1202;					//设置IF位打开中断
 
 		p_task_stack -= p_task->stack_size;
 		p_proc++;
@@ -42,13 +43,25 @@ PUBLIC int kernel_main(){
 	put_irq_handler(CLOCK_IRQ,clock_handler);
 	enable_irq(CLOCK_IRQ);
 
+	proc_table[0].ticks = proc_table[0].priority = 15;
+	proc_table[1].ticks = proc_table[1].priority = 5;
+	proc_table[2].ticks = proc_table[2].priority = 3;
+
 	/*初始化8253 PIT*/
 	out_byte(TIMER_MODE,RATE_GENERATOR);		//设置模式控制寄存器为时钟中断模式
 	out_byte(TIMER0,(u8)(TIMER_FREQ/HZ));		//写入低8位
 	out_byte(TIMER0,(u8)((TIMER_FREQ/HZ) >> 8));//写入高8位
 
-	k_reenter = 0;
 	ticks = 0;
+
+	delay(200);
+	disp_pos = 0;									//延时2秒清屏
+	for(i=0; i<80*25; i++)
+		disp_str(" ");
+	disp_pos = 0;
+
+	k_reenter = 0;
+	
 	p_proc_ready = proc_table;
 	restart();
 	while(1){}
@@ -57,24 +70,24 @@ PUBLIC int kernel_main(){
 
 void TestA(){
 	while(1){
-		disp_str("A");
+		disp_color_str("A",0xc);
 		disp_str(" ");
-		milli_delay(1000);
+		milli_delay(10);					//20 ticks，打印下一个A之前发生20次时钟中断
 	}
 }
 
 void TestB(){
 	while(1){
-		disp_str("B");
+		disp_color_str("B",0xb);
 		disp_str(" ");
-		milli_delay(1000);
+		milli_delay(10);
 	}
 }
 
 void TestC(){
 	while(1){
-		disp_str("C");
+		disp_color_str("C",0xd);
 		disp_str(" ");
-		milli_delay(1000);
+		milli_delay(10);
 	}
 }
