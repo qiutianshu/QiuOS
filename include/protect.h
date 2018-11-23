@@ -100,7 +100,7 @@ typedef struct s_tss{
 //描述符类型
 #define DA_386IGATE			0x8e			//i386中断门描述符
 
-#define GDT_SIZE 128						//全局描述符数量
+#define GDT_SIZE 256					//全局描述符数量
 #define IDT_SIZE 256						//中断门数量
 #define LDT_SIZE 2
 

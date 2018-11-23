@@ -25,3 +25,12 @@ PUBLIC void milli_delay(int milli_sec){
 	while(((get_ticks()-t)*1000/HZ)<milli_sec){}
 }
 
+
+PUBLIC void init_clock(){
+	/*初始化8253 PIT*/
+	out_byte(TIMER_MODE,RATE_GENERATOR);		//设置模式控制寄存器为时钟中断模式
+	out_byte(TIMER0,(u8)(TIMER_FREQ/HZ));		//写入低8位
+	out_byte(TIMER0,(u8)((TIMER_FREQ/HZ) >> 8));//写入高8位
+	put_irq_handler(CLOCK_IRQ,clock_handler);
+	enable_irq(CLOCK_IRQ);
+}

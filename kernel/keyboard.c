@@ -1,0 +1,167 @@
+#include "type.h"
+#include "const.h"
+#include "proto.h"
+#include "protect.h"
+#include "proc.h"
+#include "keyboard.h"
+#include "keymap.h"
+#include "global.h"
+
+PRIVATE KB_INPUT kb_in;
+
+PRIVATE int code_with_E0;
+PRIVATE int shift_l;
+PRIVATE int shift_r;
+PRIVATE int ctrl_l;
+PRIVATE int ctrl_r;
+PRIVATE int alt_l;
+PRIVATE int alt_r;
+PRIVATE int colunm;
+
+PRIVATE u8 get_byte_from_buf(){
+	u8 scan_code;
+	while(kb_in.count <= 0){}			//等待下一个字节到来
+	disable_int();						//关中断
+	scan_code = *(kb_in.p_tail);
+	kb_in.p_tail++;
+	if(kb_in.p_tail == kb_in.buf + 128)
+		kb_in.p_tail = kb_in.buf;		//循环读取
+	kb_in.count--;
+	enable_int();
+
+	return scan_code;
+}
+
+PUBLIC void init_keyboard(){
+	shift_l = shift_r = 0;
+	ctrl_l = ctrl_r = 0;
+	alt_l = alt_r = 0;
+	kb_in.count = 0;
+	kb_in.p_head = kb_in.p_tail = kb_in.buf;
+
+	put_irq_handler(KEYBOARD_IRQ,keyboard_handler);
+	enable_irq(KEYBOARD_IRQ);
+}
+
+PUBLIC void keyboard_handler(){
+	u8 scan_code = in_byte(0x60);			//读取8042缓冲区
+//	disp_int(scan_code);
+	if(kb_in.count <= 128){					//缓冲区满则丢弃
+		*(kb_in.p_head) = scan_code;
+		kb_in.p_head++;
+		if(kb_in.p_head == kb_in.buf + 128)
+			kb_in.p_head = kb_in.buf;		//循环队列
+		kb_in.count++;
+	}
+}
+
+PUBLIC void keyboard_read(){
+	u8 scan_code;
+	char output[2] = {'\0','\0'};
+	int make;				//0 make_code,1 break_code
+	u32 key = 0;			//键值
+	u32* keyrow;			//keymap的某一行
+	int isPause = 1;
+	int i;
+
+	if(kb_in.count > 0){
+		scan_code = get_byte_from_buf();
+		if(scan_code == 0xe1){
+			u32 Pause[]={0xe1,0x1d,0x45,0xe1,0x9d,0xc5};
+			for(i=1; 1<6; i++){								//读取后面5个字节
+				if(get_byte_from_buf() != Pause[i]){		
+					isPause = 0;
+					break;									//不符就退出
+				}
+			}
+			if(isPause)
+				key = PAUSEBREAK;
+		}
+		else if(scan_code == 0xe0){
+			scan_code = get_byte_from_buf();
+			if(scan_code == 0x2a){							//printscreen被按下
+				if(get_byte_from_buf() == 0xe0)
+					if(get_byte_from_buf() == 0x37){
+						key = PRINTSCREEN;
+						make = 1;
+					}
+			}
+			if(scan_code == 0xb7){							//printscreen松开
+				if(get_byte_from_buf() == 0xe0)
+					if(get_byte_from_buf() == 0xaa){
+						key = PRINTSCREEN;
+						make = 0;
+					}
+			}
+			/*不是PRINTSCREEN*/
+			if(key = 0)
+				code_with_E0 = 1;
+		}
+
+		if(key != PAUSEBREAK && (key != PRINTSCREEN)){
+			make = (scan_code & 0x80 ? 0:1);					//判断make 还是 break
+			keyrow = &keymap[(scan_code & 0x7f) * 3];
+			
+			colunm = 0;
+			
+			if(shift_r || shift_l)
+				colunm = 1;
+			if(code_with_E0){
+				colunm = 2;
+				code_with_E0 = 0;
+			}
+			//disp_int(colunm);
+			key = keyrow[colunm];
+
+			switch(key){
+				case SHIFT_L:
+					shift_l = make;
+				//	key = 0;
+					break;
+				case SHIFT_R:
+					shift_r = make;
+				//	key = 0;
+					break;
+				case CTRL_L:
+					ctrl_l = make;
+				//	key = 0;
+					break;
+				case CTRL_R:
+					ctrl_r = make;
+				//	key = 0;
+					break;
+				case ALT_L:
+					alt_l = make;
+				//	key = 0;
+					break;
+				case ALT_R:
+					alt_r = make;
+				//	key = 0;
+					break;
+				default:
+					break;
+
+			}
+			if(make){
+				key |=shift_l ? FLAG_SHIFT_L : 0;
+				key |=shift_r ?	FLAG_SHIFT_R : 0;
+				key |=ctrl_l  ? FLAG_CTRL_L  : 0;
+				key |=ctrl_r  ? FLAG_CTRL_R  : 0;
+				key |=alt_l   ? FLAG_ALT_L   : 0;
+				key |=alt_r   ? FLAG_ALT_R   : 0;
+				in_process(key);
+			}
+
+		}
+
+	}
+
+}
+
+PUBLIC void in_process(int key){
+	char output[2] = {'\0','\0'};
+	if(!(key & 0x100)){
+		output[0] = key & 0xff;
+		disp_str(output);
+	}
+}

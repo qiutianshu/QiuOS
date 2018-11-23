@@ -42,6 +42,9 @@
 #define NR_IRQ				0x10			//中断数量
 #define NR_SYS_CALL			0x10			//系统调用数量
 
+//中断号
+#define KEYBOARD_IRQ		0x1 			//键盘
+
 //中断向量
 #define	INT_VECTOR_DIVIDE			0x0
 #define	INT_VECTOR_DEBUG			0x1
@@ -65,12 +68,13 @@
 #define CLOCK_IRQ					0x0
 
 //进程相关常量
-#define NR_TASKS					3		//进程数量
+#define NR_TASKS					4		//进程数量
 
 #define STACK_SIZE_TESTA            0x8000
 #define STACK_SIZE_TESTB            0x8000
 #define STACK_SIZE_TESTC            0x8000
-#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+STACK_SIZE_TESTB+STACK_SIZE_TESTC)
+#define STACK_SIZE_TTY				0x8000
+#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+STACK_SIZE_TESTB+STACK_SIZE_TESTC+STACK_SIZE_TTY)
 
 //描述符相关常量
 #define DA_32	0x4000				//32位段

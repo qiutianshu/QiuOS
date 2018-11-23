@@ -12,6 +12,7 @@ PUBLIC void delay();
 PUBLIC void TestA();
 PUBLIC void TestB();
 PUBLIC void TestC();
+PUBLIC void task_tty();
 PUBLIC void memset(void* dest,char chr,int size);
 PUBLIC void strcpy(void* dest, void* src);
 PUBLIC void clock_handler();
@@ -19,6 +20,12 @@ PUBLIC void disable_irq(int irq);
 PUBLIC void enable_irq(int irq);
 PUBLIC void put_irq_handler(int irq, irq_handler handler);
 PUBLIC void milli_delay(int milli_sec);	//毫秒延时函数
+PUBLIC void keyboard_handler();			//键盘中断处理
+PUBLIC void keyboard_read();			//tty任务读取键盘输入
+PUBLIC void init_keyboard();
+PUBLIC void init_clock();
+PUBLIC void disable_int();				//关中断
+PUBLIC void enable_int();				//开中断
 
 
 /*   以下是系统调用相关		*/
