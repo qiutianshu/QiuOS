@@ -1,17 +1,5 @@
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                              keymap.h
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-                                            Forrest Yu, January, 2004
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-/********************************************************************/
-/*    "scan code" <--> "key" map.                                   */
-/*    It should be and can only be included by keyboard.c!          */
-/********************************************************************/
-
-#ifndef	_ORANGES_KEYMAP_H_
-#define	_ORANGES_KEYMAP_H_
+#ifndef	_QIUOS_KEYMAP_H_
+#define	_QIUOS_KEYMAP_H_
 
 
 /* Keymap for US MF-2 keyboard. */
@@ -243,5 +231,5 @@ WWW Favorites	E0, 66		E0, E6
 
 
 
-#endif /* _ORANGES_KEYMAP_H_ */
+#endif 
 
