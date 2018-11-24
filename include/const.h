@@ -16,7 +16,7 @@
 /*控制台数量*/
 #define NR_CONSOLES		3
 #define CONSOLE_BASE	0xb8000
-#define CONSOLE_SIZE	0x8000
+#define CONSOLE_SIZE	0x8000 		//显存总大小
 #define CONSOLE_COLOR	0xd 		//控制台默认显示颜色
 
 /*
