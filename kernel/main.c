@@ -44,7 +44,7 @@ PUBLIC int kernel_main(){
 	init_keyboard();								//初始化键盘
 
 	proc_table[0].ticks = proc_table[0].priority = 15;
-	proc_table[1].ticks = proc_table[1].priority = 5;
+	proc_table[1].ticks = proc_table[1].priority = 3;
 	proc_table[2].ticks = proc_table[2].priority = 3;
 	proc_table[3].ticks = proc_table[3].priority = 3;
 
@@ -52,11 +52,11 @@ PUBLIC int kernel_main(){
 
 	ticks = 0;
 
-	delay(200);
-	disp_pos = 0;									//延时2秒清屏
-	for(i=0; i<80*25; i++)
-		disp_str(" ");
-	disp_pos = 0;
+//	delay(200);
+//	disp_pos = 0;									//延时2秒清屏
+//	for(i=0; i<80*25; i++)
+//		disp_str(" ");
+//	disp_pos = 0;
 
 	k_reenter = 0;
 	

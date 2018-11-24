@@ -4,6 +4,14 @@
 #define PUBLIC 
 #define PRIVATE static
 #define EXTERN	extern 
+
+/*VGA显示设置*/
+#define CRT_CTRL_REG	0x3d4		//地址寄存器
+#define CRT_DATA_REG	0x3d5		//数据寄存器
+#define START_ADDR_H	0xc 		//
+#define START_ADDR_L	0xd 
+#define CURSOR_H 		0xe 
+#define CURSOR_L		0xf 
 /*
 	8253端口说明
 	0x40    Count0   输出到IRQ0，每隔一定时间产生时钟中断

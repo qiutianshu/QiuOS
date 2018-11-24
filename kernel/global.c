@@ -7,10 +7,10 @@
 #include "global.h"
 
 PUBLIC TASK task_table[NR_TASKS]={
+	{task_tty,STACK_SIZE_TTY,"tty"},
     {TestA,STACK_SIZE_TESTA,"TestA"},
     {TestB,STACK_SIZE_TESTB,"TestB"},
-    {TestC,STACK_SIZE_TESTC,"TestC"},
-    {task_tty,STACK_SIZE_TTY,"tty"}
+    {TestC,STACK_SIZE_TESTC,"TestC"}
 };
 
 PUBLIC irq_handler irq_table[NR_IRQ];

@@ -38,6 +38,7 @@ PUBLIC void init_keyboard(){
 	alt_l = alt_r = 0;
 	kb_in.count = 0;
 	kb_in.p_head = kb_in.p_tail = kb_in.buf;
+	code_with_E0 = 0;
 
 	put_irq_handler(KEYBOARD_IRQ,keyboard_handler);
 	enable_irq(KEYBOARD_IRQ);
@@ -94,14 +95,14 @@ PUBLIC void keyboard_read(){
 					}
 			}
 			/*不是PRINTSCREEN*/
-			if(key = 0)
+			if(key == 0){
 				code_with_E0 = 1;
+			}
 		}
 
-		if(key != PAUSEBREAK && (key != PRINTSCREEN)){
+		if((key != PAUSEBREAK) && (key != PRINTSCREEN)){
 			make = (scan_code & 0x80 ? 0:1);					//判断make 还是 break
 			keyrow = &keymap[(scan_code & 0x7f) * 3];
-			
 			colunm = 0;
 			
 			if(shift_r || shift_l)
@@ -110,33 +111,25 @@ PUBLIC void keyboard_read(){
 				colunm = 2;
 				code_with_E0 = 0;
 			}
-			//disp_int(colunm);
 			key = keyrow[colunm];
-
 			switch(key){
 				case SHIFT_L:
 					shift_l = make;
-				//	key = 0;
 					break;
 				case SHIFT_R:
 					shift_r = make;
-				//	key = 0;
 					break;
 				case CTRL_L:
 					ctrl_l = make;
-				//	key = 0;
 					break;
 				case CTRL_R:
 					ctrl_r = make;
-				//	key = 0;
 					break;
 				case ALT_L:
 					alt_l = make;
-				//	key = 0;
 					break;
 				case ALT_R:
 					alt_r = make;
-				//	key = 0;
 					break;
 				default:
 					break;
@@ -160,8 +153,28 @@ PUBLIC void keyboard_read(){
 
 PUBLIC void in_process(int key){
 	char output[2] = {'\0','\0'};
-	if(!(key & 0x100)){
+	if(!(key & 0x100)){						//显示可打印字符
 		output[0] = key & 0xff;
 		disp_str(output);
 	}
+	else{
+		int raw_code = key & 0x1ff;
+		switch(raw_code){
+			case UP:
+				if((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)){				//shift + UP
+					disable_int();
+					out_byte(CRT_CTRL_REG,START_ADDR_H);
+					out_byte(CRT_DATA_REG,((80*15) >> 8) & 0xff);					//从第15行显示
+					out_byte(CRT_CTRL_REG,START_ADDR_L);
+					out_byte(CRT_DATA_REG,(80*15) & 0xff);
+					enable_int();
+				}
+				break;
+			case DOWN:
+				break;
+			default:
+				break;
+		}
+	}
+
 }
