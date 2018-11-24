@@ -60,7 +60,7 @@ kernel/keyboard.o:kernel/keyboard.c include/const.h include/type.h include/prote
 kernel/protect.o:kernel/protect.c include/const.h include/type.h include/global.h include/proto.h include/protect.h
 			$(CC) $(CFLAGS) -o $@ $<
 
-kernel/tty.o:kernel/tty.c include/proto.h
+kernel/tty.o:kernel/tty.c include/const.h include/type.h include/protect.h include/proto.h include/global.h include/proc.h include/tty.h include/console.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/start.o:kernel/start.c include/const.h include/type.h include/protect.h include/proto.h include/global.h
@@ -69,7 +69,7 @@ kernel/start.o:kernel/start.c include/const.h include/type.h include/protect.h i
 kernel/main.o:kernel/main.c include/const.h include/type.h include/protect.h include/proto.h include/global.h include/proc.h
 			$(CC) $(CFLAGS) -o $@ $<
 
-kernel/global.o:kernel/global.c include/const.h include/type.h include/protect.h include/global.h include/proc.h
+kernel/global.o:kernel/global.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/i8259.o:kernel/i8259.c include/const.h include/type.h include/protect.h include/proto.h

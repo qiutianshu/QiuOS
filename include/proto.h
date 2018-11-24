@@ -21,12 +21,14 @@ PUBLIC void enable_irq(int irq);
 PUBLIC void put_irq_handler(int irq, irq_handler handler);
 PUBLIC void milli_delay(int milli_sec);	//毫秒延时函数
 PUBLIC void keyboard_handler();			//键盘中断处理
-PUBLIC void keyboard_read();			//tty任务读取键盘输入
+PUBLIC void keyboard_read(TTY* p_tty);			//tty任务读取键盘输入
 PUBLIC void init_keyboard();
 PUBLIC void init_clock();
 PUBLIC void disable_int();				//关中断
 PUBLIC void enable_int();				//开中断
-
+PUBLIC void in_process(TTY* p_tty, u32 key);
+PUBLIC void disp_char(CONSOLE* p_cone,char ch);
+PUBLIC void set_cursor(unsigned int position);
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();

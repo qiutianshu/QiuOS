@@ -1,5 +1,7 @@
 #include "type.h"
 #include "const.h"
+#include "tty.h"
+#include "console.h"
 #include "proto.h"
 #include "protect.h"
 #include "proc.h"
@@ -56,7 +58,7 @@ PUBLIC void keyboard_handler(){
 	}
 }
 
-PUBLIC void keyboard_read(){
+PUBLIC void keyboard_read(TTY* p_tty){
 	u8 scan_code;
 	char output[2] = {'\0','\0'};
 	int make;				//0 make_code,1 break_code
@@ -142,39 +144,8 @@ PUBLIC void keyboard_read(){
 				key |=ctrl_r  ? FLAG_CTRL_R  : 0;
 				key |=alt_l   ? FLAG_ALT_L   : 0;
 				key |=alt_r   ? FLAG_ALT_R   : 0;
-				in_process(key);
+				in_process(p_tty,key);
 			}
-
-		}
-
-	}
-
-}
-
-PUBLIC void in_process(int key){
-	char output[2] = {'\0','\0'};
-	if(!(key & 0x100)){						//显示可打印字符
-		output[0] = key & 0xff;
-		disp_str(output);
-	}
-	else{
-		int raw_code = key & 0x1ff;
-		switch(raw_code){
-			case UP:
-				if((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)){				//shift + UP
-					disable_int();
-					out_byte(CRT_CTRL_REG,START_ADDR_H);
-					out_byte(CRT_DATA_REG,((80*15) >> 8) & 0xff);					//从第15行显示
-					out_byte(CRT_CTRL_REG,START_ADDR_L);
-					out_byte(CRT_DATA_REG,(80*15) & 0xff);
-					enable_int();
-				}
-				break;
-			case DOWN:
-				break;
-			default:
-				break;
 		}
 	}
-
 }

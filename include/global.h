@@ -22,6 +22,10 @@ EXTERN char task_stack[STACK_SIZE_TOTAL];
 EXTERN int k_reenter;
 EXTERN int ticks;
 
+EXTERN int current_console;				//当前控制台
+
 extern TASK task_table[];
 extern irq_handler irq_table[];
 extern system_call sys_call_table[];
+extern TTY tty_table[];
+extern CONSOLE console_table[];

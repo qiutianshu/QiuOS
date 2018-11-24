@@ -12,6 +12,13 @@
 #define START_ADDR_L	0xd 
 #define CURSOR_H 		0xe 
 #define CURSOR_L		0xf 
+
+/*控制台数量*/
+#define NR_CONSOLES		3
+#define CONSOLE_BASE	0xb8000
+#define CONSOLE_SIZE	0x8000
+#define CONSOLE_COLOR	0xd 		//控制台默认显示颜色
+
 /*
 	8253端口说明
 	0x40    Count0   输出到IRQ0，每隔一定时间产生时钟中断
