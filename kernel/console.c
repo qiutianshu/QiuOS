@@ -3,9 +3,9 @@
 #include "keyboard.h"
 #include "tty.h"
 #include "console.h"
-#include "proto.h"
 #include "protect.h"
 #include "proc.h"
+#include "proto.h"
 #include "global.h"
 
 PRIVATE void set_vga_start_addr(u32 addr){

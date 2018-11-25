@@ -83,7 +83,8 @@
 #define CLOCK_IRQ					0x0
 
 //进程相关常量
-#define NR_TASKS					4		//进程数量
+#define NR_TASKS					1		//任务数量
+#define NR_PROCS					3		//用户进程数
 
 #define STACK_SIZE_TESTA            0x8000
 #define STACK_SIZE_TESTB            0x8000

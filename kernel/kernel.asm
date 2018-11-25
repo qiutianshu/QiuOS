@@ -288,8 +288,12 @@ save:
 
 sys_call:
 	call save
+	push dword [p_proc_ready]
+	push ecx 
+	push ebx
 	sti
 	call [sys_call_table + eax * 4]
+	add esp,12
 	mov [esi + EAXREG - P_STACKBASE],eax 	;压入返回值
 	cli
 	ret

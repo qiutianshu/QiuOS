@@ -16,15 +16,15 @@
 ;GDT
 ;								段基址			段界限					段属性
 GDT:		Descriptor       	 0,             0,                      0					;空描述符
-VIDEO:		Descriptor	  		 0xb8000,		0xffff,		 			0x93|0x60			;显存
-FLAT_RW:	Descriptor			 0,				0xfffff,				0x92 + 0x4000+0x8000;读写数据段
-FLAT_C:		Descriptor			 0,				0xfffff,				0x9a + 0x4000+0x8000;读写执行代码段
+VIDEO:		Descriptor	  		 0xb8000,		0xffff,		 			0x92|0x60			;显存
+FLAT_RW:	Descriptor			 0,				0xfffff,				0x92 | 0x4000|0x8000;读写数据段
+FLAT_C:		Descriptor			 0,				0xfffff,				0x9a | 0x4000|0x8000;读写执行代码段
 
 GdtPtr		dw	$-GDT-1																		;GDT界限
 			dd	0x90000+GDT														;GDT基地址(16位模式下低20位有效)
 
 
-SelectorVideo		equ	 VIDEO	-	GDT
+SelectorVideo		equ	 VIDEO	-	GDT 
 SelectorFlatRw		equ	 FLAT_RW - GDT
 SelectorFlatC		equ	 FLAT_C - GDT
 

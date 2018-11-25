@@ -192,7 +192,7 @@ PUBLIC void init_prot(){
 	int i;
 	PROCESS* p_proc = proc_table;
 	u16 selector_ldt = SELECTOR_LDT_FIRST >> 3;						//SELECTOR_LDT_FIRST / 8
-	for(i=0; i<NR_TASKS; i++){
+	for(i=0; i<NR_TASKS + NR_PROCS; i++){
 		init_descriptor(&gdt[selector_ldt],
 						vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts),
 						LDT_SIZE * sizeof(Descriptor) - 1,

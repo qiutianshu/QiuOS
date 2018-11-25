@@ -1,8 +1,11 @@
 #include "type.h"
 #include "const.h"
+#include "protect.h"
 #include "tty.h"
 #include "console.h"
+#include "proc.h"
 #include "proto.h"
+#include "global.h"
 
 
 PUBLIC char* atoi(char* str,int num){
@@ -25,6 +28,14 @@ PUBLIC char* atoi(char* str,int num){
 	*p = 0;
 	return str;
 
+}
+
+PUBLIC int strlen(char* str){
+	int i = 0;
+	char* p = str;
+	while(*p++)	i++;
+
+	return i;
 }
 
 PUBLIC void disp_int(int input){

@@ -14,7 +14,7 @@ EXTERN	u8  idt_ptr[6];
 EXTERN Descriptor	gdt[GDT_SIZE]; 
 EXTERN Gate			idt[IDT_SIZE];	
 
-EXTERN PROCESS proc_table[NR_TASKS];
+EXTERN PROCESS proc_table[NR_TASKS];	//进程表
 
 EXTERN PROCESS* p_proc_ready;
 EXTERN TSS tss;
@@ -25,6 +25,7 @@ EXTERN int ticks;
 EXTERN int current_console;				//当前控制台
 
 extern TASK task_table[];
+extern TASK user_proc_table[];
 extern irq_handler irq_table[];
 extern system_call sys_call_table[];
 extern TTY tty_table[];

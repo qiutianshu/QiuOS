@@ -3,9 +3,9 @@
 #include "keyboard.h"
 #include "tty.h"
 #include "console.h"
-#include "proto.h"
 #include "protect.h"
 #include "proc.h"
+#include "proto.h"
 #include "global.h"
 
 PRIVATE void init_tty(TTY* p_tty){
@@ -15,7 +15,7 @@ PRIVATE void init_tty(TTY* p_tty){
 	int nr_tty = p_tty - tty_table;
 	p_tty->p_console = console_table + nr_tty;
 
-	int console_mem_size = (CONSOLE_SIZE >> 1) / NR_CONSOLES ; //每个控制台分配的显存大小
+	int console_mem_size = (CONSOLE_SIZE >> 1) / NR_CONSOLES ; 		//每个控制台分配的显存大小
 	p_tty->p_console->origin_addr = nr_tty * console_mem_size;		//当前现存位置
 	p_tty->p_console->mem_limit = console_mem_size;
 	p_tty->p_console->current_start_addr = nr_tty * console_mem_size;
@@ -157,4 +157,14 @@ PUBLIC void set_cursor(unsigned int position){
 	out_byte(CRT_CTRL_REG,CURSOR_L);
 	out_byte(CRT_DATA_REG,position & 0xff);  
 	enable_int();
+}
+
+PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc){
+	char* p = buf;
+	int i = len;
+	while(i){
+		disp_char(tty_table[p_proc->nr_tty].p_console, *p++);
+		i--;
+	}
+	return 0;
 }

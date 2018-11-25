@@ -6,6 +6,7 @@ PUBLIC u8	in_byte(u16 port);
 PUBLIC void disp_str(char* info);
 PUBLIC void disp_int(int input);
 PUBLIC void disp_color_str(char* info,int color);
+PUBLIC char* atoi(char* str,int num);
 PUBLIC void memcpy(void *Dest,void *Src,int size);
 PUBLIC void init_8259A();
 PUBLIC void delay();
@@ -31,8 +32,13 @@ PUBLIC void disp_char(CONSOLE* p_cone,char ch);
 PUBLIC void set_cursor(unsigned int position);
 PUBLIC void switch_console(int nr_console);						//切换控制台
 PUBLIC void scroll_screen(CONSOLE* p_cone,int direction);		//翻屏
+PUBLIC int printf(char* fmt, ...);
+PUBLIC int vsprintf(char* buf, char* fmt, char* argv);			
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
 PUBLIC int get_ticks();											//用户调用接口
 PUBLIC int sys_get_ticks();										//中断处理例程
+
+PUBLIC void write(char* buf, int len);
+PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc);

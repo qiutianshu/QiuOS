@@ -29,5 +29,6 @@ INT_S_CTL	    equ     0xa0
 INT_S_CTLMASK	equ     0xa1
 
 _NR_get_tricks	equ		0x0
+_NR_write		equ		0x1
 
 INT_VECTOR_SYS_CALL equ 0x90			;与 include/const.h里面的同时修改
