@@ -15,7 +15,7 @@ PRIVATE void init_tty(TTY* p_tty){
 	int nr_tty = p_tty - tty_table;
 	p_tty->p_console = console_table + nr_tty;
 
-	int console_mem_size = (CONSOLE_SIZE >> 1) / NR_CONSOLES;		//每个控制台分配的显存大小
+	int console_mem_size = (CONSOLE_SIZE >> 1) / NR_CONSOLES ; //每个控制台分配的显存大小
 	p_tty->p_console->origin_addr = nr_tty * console_mem_size;		//当前现存位置
 	p_tty->p_console->mem_limit = console_mem_size;
 	p_tty->p_console->current_start_addr = nr_tty * console_mem_size;
@@ -31,6 +31,16 @@ PRIVATE void init_tty(TTY* p_tty){
 	}
 	set_cursor(p_tty->p_console->cursor);
 
+}
+
+PRIVATE void send_to_tty_buf(TTY* p_tty, char ch){
+	if(p_tty->count < TTY_BUF_SIZE){
+			*(p_tty->head) = ch;			//写入tty缓冲区
+			p_tty->head++;
+			if(p_tty->head == p_tty->buf+TTY_BUF_SIZE)
+				p_tty->head = p_tty->buf;
+			p_tty->count++;
+		}
 }
 
 PUBLIC int is_current_console(CONSOLE* p_cone){
@@ -74,13 +84,7 @@ PUBLIC void task_tty(){
 PUBLIC void in_process(TTY* p_tty,u32 key){
 	char output[2] = {'\0','\0'};
 	if(!(key & 0x100)){						//显示可打印字符
-		if(p_tty->count < TTY_BUF_SIZE){
-			*(p_tty->head) = key;			//写入tty缓冲区
-			p_tty->head++;
-			if(p_tty->head == p_tty->buf+TTY_BUF_SIZE)
-				p_tty->head = p_tty->buf;
-			p_tty->count++;
-		}
+		send_to_tty_buf(p_tty,key);
 	}
 	else{
 		int raw_code = key & 0x1ff;
@@ -92,6 +96,12 @@ PUBLIC void in_process(TTY* p_tty,u32 key){
 			case DOWN:
 				if((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R))
 					scroll_screen(p_tty->p_console,SCR_DOWN);
+				break;
+			case ENTER:
+				send_to_tty_buf(p_tty,'\n');
+				break;
+			case BACKSPACE:
+				send_to_tty_buf(p_tty,'\b');
 				break;
 			case F1:
 			case F2:
@@ -116,9 +126,27 @@ PUBLIC void in_process(TTY* p_tty,u32 key){
 
 PUBLIC void disp_char(CONSOLE* p_cone, char ch){
 	u8* pos = (u8*)(CONSOLE_BASE + p_cone->cursor * 2);	//指向当前控制台显示地址
-	*pos++ = ch;										//显示一个空格
-	*pos++ = CONSOLE_COLOR;								//字体颜色 增加一个空格
-	p_cone->cursor++;
+	if(ch == '\n')
+		if(p_cone->cursor < p_cone->origin_addr + p_cone->mem_limit - SCREEN_WIDTH)
+			p_cone->cursor = p_cone->origin_addr + SCREEN_WIDTH * ((p_cone->cursor - p_cone->origin_addr) / SCREEN_WIDTH + 1);
+
+    if(ch == '\b')
+		if(p_cone->cursor > p_cone->origin_addr){
+			p_cone->cursor--;
+			*(pos - 2) = ' ';
+			*(pos - 1) = CONSOLE_COLOR;
+		}
+	 if(ch !='\n' && ch != '\b' && (p_cone->cursor < p_cone->origin_addr + p_cone->mem_limit)){
+		*pos++ = ch;									
+		*pos++ = CONSOLE_COLOR;								
+		p_cone->cursor++;
+	}
+	while(p_cone->cursor >= p_cone->current_start_addr + 80 *25)			//自动向下翻页
+		scroll_screen(p_cone,SCR_DOWN);
+
+	while(p_cone->cursor < p_cone->current_start_addr){			     	    //删除时自动向上翻页
+		scroll_screen(p_cone,SCR_UP);
+	}																
 	set_cursor(p_cone->cursor);							//光标跟随
 }
 
