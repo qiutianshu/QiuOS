@@ -28,6 +28,13 @@ typedef struct s_proc{
 	int priority;
 	u32 pid;
 	char p_name[32];
+	int p_flags;
+	MESSAGE* p_msg;
+	int p_recvfrom;
+	int p_sendto;
+	int has_int_msg;
+	struct s_proc* q_sending;					//指向自身消息队列头
+	struct s_proc* next_sending;				
 	int nr_tty;
 }PROCESS;
 
@@ -38,3 +45,6 @@ typedef struct s_task{
 }TASK;
 
 #define LDT_SIZE	128
+#define proc2pid(x)	(x - proc_table)
+
+#define phy_cpy		memcpy

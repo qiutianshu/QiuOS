@@ -5,6 +5,34 @@
 #define PRIVATE static
 #define EXTERN	extern 
 
+void assertion_failure(char* exp,char* file,char* base_file,int line);
+#define assert(exp)		if(exp);\
+else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
+
+#define printl			printf 		
+
+#define MAG_CH_PANIC	0x02
+#define MAG_CH_ASSERT	0x03
+
+/*进程的状态*/
+#define RUNNING			0			//正在运行或者就绪
+#define SENDING 		0x2 		//消息未发送出去正在发送
+#define RECEIVING		0x4 		//未接收到消息正在接收
+#define ANY				(NR_TASKS + NR_PROCS + 10)
+#define NO_TASK			(NR_TASKS + NR_PROCS + 20)
+#define INTERRUPT		-10
+
+#define SEND 			1
+#define RECEIVE			2
+#define BOTH			3	
+
+#define TASK_SYS		1
+
+enum msgtype{						//消息类型
+	HARD_INT	=	1,
+	GET_TICKS,
+};
+
 /*VGA显示设置*/
 #define CRT_CTRL_REG	0x3d4		//地址寄存器
 #define CRT_DATA_REG	0x3d5		//数据寄存器
@@ -18,6 +46,7 @@
 #define CONSOLE_BASE	0xb8000
 #define CONSOLE_SIZE	0x8000 		//显存总大小
 #define CONSOLE_COLOR	0xd 		//控制台默认显示颜色
+#define COLOR_RED		0xc
 
 /*
 	8253端口说明
@@ -83,14 +112,15 @@
 #define CLOCK_IRQ					0x0
 
 //进程相关常量
-#define NR_TASKS					1		//任务数量
+#define NR_TASKS					2		//任务数量
 #define NR_PROCS					3		//用户进程数
 
 #define STACK_SIZE_TESTA            0x8000
 #define STACK_SIZE_TESTB            0x8000
 #define STACK_SIZE_TESTC            0x8000
 #define STACK_SIZE_TTY				0x8000
-#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+STACK_SIZE_TESTB+STACK_SIZE_TESTC+STACK_SIZE_TTY)
+#define STACK_SIZE_SYS_TASK			0x8000
+#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+ STACK_SIZE_TESTB+ STACK_SIZE_TESTC+ STACK_SIZE_TTY+ STACK_SIZE_SYS_TASK)
 
 //描述符相关常量
 #define DA_32	0x4000				//32位段

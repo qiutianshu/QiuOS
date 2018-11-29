@@ -271,9 +271,11 @@ save:
 	push es
 	push fs
 	push gs
+	mov esi,edx 							;暂存edx
 	mov dx,ss 
 	mov ds,dx
 	mov es,dx
+	mov edx,esi								;恢复edx
 
 	mov esi,esp
 	inc dword [k_reenter]
@@ -288,12 +290,15 @@ save:
 
 sys_call:
 	call save
+	push esi
 	push dword [p_proc_ready]
+	push edx
 	push ecx 
 	push ebx
 	sti
 	call [sys_call_table + eax * 4]
-	add esp,12
+	add esp,16
+	pop esi
 	mov [esi + EAXREG - P_STACKBASE],eax 	;压入返回值
 	cli
 	ret

@@ -66,6 +66,7 @@ PRIVATE void tty_write(TTY* p_tty){
 }
 
 PUBLIC void task_tty(){
+	//assert(0);
 	TTY* p_tty;	
 	for(p_tty=tty_table; p_tty<tty_table+NR_CONSOLES; p_tty++)			//初始化tty_table
 		init_tty(p_tty);
@@ -166,5 +167,43 @@ PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc){
 		disp_char(tty_table[p_proc->nr_tty].p_console, *p++);
 		i--;
 	}
+	return 0;
+}
+
+PUBLIC int sys_printx(int unused1, int unused2, char* str, PROCESS* p_proc){
+	const char* p;
+	char ch;
+	char reenter_error[] = "^ k_reenter is encorrect for unknown reason";
+	reenter_error[0] = MAG_CH_PANIC;
+
+	if(k_reenter == 0)								//ring1-ring3
+		p = va2la(proc2pid(p_proc), str);			//虚拟地址转化线性地址		
+	else if(k_reenter > 0)
+		p = str;
+	else 
+		p = reenter_error;
+
+	if((*p == MAG_CH_PANIC) || ((*p == MAG_CH_ASSERT) && p_proc_ready < &proc_table[NR_TASKS])){
+		disable_int();
+		char* v = (char*)CONSOLE_BASE;
+		char* q = p + 1;									//跳过MAG_CH
+		while(v < (char*)(CONSOLE_BASE + CONSOLE_SIZE)){
+			*v++ = *q++;
+			*v++ = COLOR_RED;
+			if(!*q){
+					while(((int)v - CONSOLE_BASE) % (SCREEN_WIDTH * 16)){
+						*v++ = ' ';
+						*v++ = CONSOLE_COLOR;
+					}
+				q = p +1;
+			}
+		}
+		__asm__ __volatile__("hlt");
+	}
+
+	while((ch = *p++) != 0){
+		disp_char(tty_table[p_proc->nr_tty].p_console, ch);
+	}
+
 	return 0;
 }

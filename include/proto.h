@@ -34,6 +34,13 @@ PUBLIC void switch_console(int nr_console);						//切换控制台
 PUBLIC void scroll_screen(CONSOLE* p_cone,int direction);		//翻屏
 PUBLIC int printf(char* fmt, ...);
 PUBLIC int vsprintf(char* buf, char* fmt, char* argv);			
+PUBLIC int ldt_seg_linear(PROCESS* p, int idx);
+PUBLIC void* va2la(int pid, void* va);
+PUBLIC void reset_msg(MESSAGE* msg);
+PUBLIC int send_rec(int funtion, int sec_dest, MESSAGE* msg);	//封装了sendrec
+PUBLIC void panic(char* fmt, ...);
+
+PUBLIC void task_sys();											//系统进程
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
@@ -42,3 +49,9 @@ PUBLIC int sys_get_ticks();										//中断处理例程
 
 PUBLIC void write(char* buf, int len);
 PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc);
+
+PUBLIC int sendrec(int function, int src_dest, MESSAGE* m);
+PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p);
+
+PUBLIC int printx(char* buf);
+PUBLIC int sys_printx(int unused1, int unused2, char* ch, PROCESS* p_proc);

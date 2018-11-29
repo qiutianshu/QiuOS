@@ -14,7 +14,7 @@ EXTERN	u8  idt_ptr[6];
 EXTERN Descriptor	gdt[GDT_SIZE]; 
 EXTERN Gate			idt[IDT_SIZE];	
 
-EXTERN PROCESS proc_table[NR_TASKS];	//进程表
+EXTERN PROCESS proc_table[NR_TASKS + NR_PROCS];	//进程表
 
 EXTERN PROCESS* p_proc_ready;
 EXTERN TSS tss;

@@ -19,6 +19,7 @@ PUBLIC int kernel_main(){
 	u8 		privilege;
 	u8 		rpl;
 	int 	eflags;
+	int prior;
 
 	for(i=0; i<NR_TASKS + NR_PROCS; i++){
 		if(i < NR_TASKS){							//任务
@@ -26,12 +27,14 @@ PUBLIC int kernel_main(){
 			privilege = PRIVILEGE_TASK;
 			rpl = SA_RPL1;
 			eflags = 0x1202;						//开启所有IO权限，打开中断
+			prior = 15;
 		}
 		else{
 			p_task = user_proc_table + (i - NR_TASKS);
 			privilege = 3;//PRIVILEGE_USER;
 			rpl = SA_RPL3;
 			eflags = 0x202; 						//剥夺IO权限
+			prior = 5;
 		}
 		/*初始化进程表工作*/
 		strcpy(p_proc->p_name,p_task->name);		
@@ -54,6 +57,17 @@ PUBLIC int kernel_main(){
 		p_proc->regs.eflags = eflags;			
 
 		p_task_stack -= p_task->stack_size;
+
+		p_proc->ticks = p_proc->priority = prior;	//设置优先级
+
+		p_proc->p_flags = 0;
+		p_proc->p_msg = 0;
+		p_proc->p_recvfrom = NO_TASK;
+		p_proc->p_sendto = NO_TASK;
+		p_proc->has_int_msg = 0;
+		p_proc->q_sending = 0;
+		p_proc->next_sending = 0;
+		
 		p_proc++;
 		p_task++;
 		selector_ldt +=1 << 3;
@@ -63,14 +77,9 @@ PUBLIC int kernel_main(){
 	init_clock();									//初始化时钟
 	init_keyboard();								//初始化键盘
 
-	/*指定进程优先级*/
-	proc_table[0].ticks = proc_table[0].priority = 1;	
-	proc_table[1].ticks = proc_table[1].priority = 1;
-	proc_table[2].ticks = proc_table[2].priority = 1;
-	proc_table[3].ticks = proc_table[3].priority = 1;
 	/*指定进程对应的控制台*/
 	proc_table[1].nr_tty = 0;
-	proc_table[2].nr_tty = 2;
+	proc_table[2].nr_tty = 0;
 	proc_table[3].nr_tty = 2;
 
 	
@@ -85,18 +94,18 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
+	MESSAGE msg;
 	while(1){
-	//	printf("<Ticks:%x>", get_ticks());
-	//	milli_delay(200);					//20 ticks，打印下一个A之前发生20次时钟中断
+		reset_msg(&msg);
+		msg.type = GET_TICKS;
+		send_recv(BOTH, TASK_SYS, &msg);
+		printf("<Ticks:%d> ", msg.RETVAL);
+		milli_delay(200);					//20 ticks，打印下一个A之前发生20次时钟中断
 	}
 }
 
 void TestB(){
 	while(1){
-	//	printf("<Ticks:%x>", get_ticks());
-	//	milli_delay(200);
-	//	disp_color_str("B",0xb);
-	//	disp_str(" ");
 		milli_delay(200);
 	}
 }
@@ -108,4 +117,3 @@ void TestC(){
 		milli_delay(200);
 	}
 }
-
