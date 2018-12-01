@@ -153,8 +153,8 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 	assert(proc2pid(p_recv) != src);
 
 	if((p_recv->has_int_msg) &&
-		 ((p_recv->p_recvfrom == ANY) || 
-		 	(p_recv->p_recvfrom == INTERRUPT))){
+		 ((src == ANY) || 
+		 	(src == INTERRUPT))){
 		MESSAGE m;
 		reset_msg(&m);
 		m.source = INTERRUPT;
@@ -165,6 +165,22 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 		p_recv->has_int_msg = 0;
 		assert(p_recv->p_flags == 0);
 		assert(p_recv->p_msg == 0);
+		assert(p_recv->p_sendto == NO_TASK);
+		assert(p_recv->has_int_msg == 0);
+
+		return 0;
+	}
+
+	if((!(p_recv->has_int_msg)) && (src == INTERRUPT)){		//中断消息还没来
+		p_recv->p_flags |= RECEIVING;					
+		p_recv->p_msg = msg;
+		p_recv->p_recvfrom = INTERRUPT;
+
+		block(p_recv);									
+
+		assert(p_recv->p_flags == RECEIVING);	
+		assert(p_recv->p_msg != 0);
+		assert(p_recv->p_recvfrom = INTERRUPT);
 		assert(p_recv->p_sendto == NO_TASK);
 		assert(p_recv->has_int_msg == 0);
 
@@ -285,11 +301,26 @@ PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p){
 	if(function == RECEIVE)
 		return (recv_msg(p, src_dest, m));
 	else
-		__asm__ __volatile__("ud2");
+		panic("unknown message function in kernel/proc.c line: 305");
 
 	return 0;
 }
 
+
+PUBLIC void info_task(int pid){
+	PROCESS* p = proc_table + pid;
+	if((p->p_flags == RECEIVING) && (p->p_recvfrom == INTERRUPT || p->p_recvfrom == ANY)){			//B进程等待接收中断消息
+		p->p_flags = ~RECEIVING;
+		p->p_msg = 0;
+		p->p_recvfrom = NO_TASK;
+		p->p_sendto = NO_TASK;
+		p->has_int_msg = 0;
+
+		unblock(p);
+	}
+	else
+		p->has_int_msg = 1;						
+}
 
 
 

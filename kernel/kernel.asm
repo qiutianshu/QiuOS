@@ -169,7 +169,7 @@ copr_error:
 
 
 ;---------------------------------------------------------------------------
-;中断处理
+;主8259A中断处理
 ;---------------------------------------------------------------------------
 %macro hwint_master		1
 	call save					;当前EOI未发送，不可能有时钟中断
@@ -187,6 +187,29 @@ copr_error:
 	and al,0xff-(1 << %1)		;恢复当前中断
 	out INT_M_CTLMASK,al
 	ret 
+%endmacro
+;---------------------------------------------------------------------------
+;从8259A中断处理
+;---------------------------------------------------------------------------
+%macro hwint_slaver		1
+	call save					
+	in al,INT_S_CTLMASK
+	or al,(1 << %1 - 8)				
+	out INT_S_CTLMASK,al
+	mov al,EOI					
+	out INT_M_CTL,al
+	nop 				
+	nop  						;一定的时间延迟
+	out INT_S_CTL,al 			;主从都要置EOI
+	sti 				
+	push %1		
+	call [irq_table + 4 * %1]	
+	add esp,4 
+	cli 
+	in al,INT_S_CTLMASK			;恢复中断
+	and al,0xff-(1 << %1 - 8)		
+	out INT_S_CTLMASK,al
+	ret 										;0030507
 %endmacro
 
 hwint00:
@@ -214,39 +237,33 @@ hwint07:
 	hwint_master	7
 
 hwint08:
-	hwint_master	8
+	hwint_slaver	8
 
 hwint09:
-	hwint_master	9
+	hwint_slaver	9
 
 hwint10:
-	hwint_master	10
+	hwint_slaver	10
 
 hwint11:
-	hwint_master	11
+	hwint_slaver	11
 
 hwint12:
-	hwint_master	12
+	hwint_slaver	12
 
 hwint13:
-	hwint_master	13
+	hwint_slaver	13
 
-hwint14:
-	hwint_master	14
+hwint14:							;硬盘中断
+	hwint_slaver	14
 
 hwint15:
-	hwint_master	15
+	hwint_slaver	15
 
 exception:
 	call exception_handler
 	add esp,8						;栈顶指向eip
 	hlt
-
-hwint:
-	call spurious_irq
-	add esp,4
-	hlt
-
 
 restart:
 	mov esp,[p_proc_ready]

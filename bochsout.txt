@@ -1,6 +1,6 @@
 00000000000i[      ] Bochs x86 Emulator 2.6.9
 00000000000i[      ]   Built from SVN snapshot on April 9, 2017
-00000000000i[      ] Compiled on Oct 16 2018 at 09:08:16
+00000000000i[      ] Compiled on Dec  1 2018 at 18:38:45
 00000000000i[      ] System configuration
 00000000000i[      ]   processors: 1 (cores=1, HT threads=1)
 00000000000i[      ]   A20 line support: yes
@@ -31,7 +31,7 @@
 00000000000i[      ]   Sound support: no
 00000000000i[      ]   USB support: no
 00000000000i[      ]   VGA extension support: vbe
-00000000000i[MEM0  ] allocated memory at 0x7f55706e3010. after alignment, vector=0x7f55706e4000
+00000000000i[MEM0  ] allocated memory at 0x7f61de706010. after alignment, vector=0x7f61de707000
 00000000000i[MEM0  ] 32.00MB
 00000000000i[MEM0  ] mem block size = 0x00020000, blocks=256
 00000000000i[MEM0  ] rom at 0xfffe0000/131072 ('/usr/local/share/bochs/BIOS-bochs-latest')
@@ -41,7 +41,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Thu Nov 29 16:33:34 2018 (time0=1543480414)
+00000000000i[CMOS  ] Setting initial clock to: Sat Dec  1 20:46:35 2018 (time0=1543668395)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -70,6 +70,10 @@
 00000000000i[PLUGIN] init_dev of 'keyboard' plugin device by virtual method
 00000000000i[KBD   ] will paste characters every 400 keyboard ticks
 00000000000i[PLUGIN] init_dev of 'harddrv' plugin device by virtual method
+00000000000i[HD    ] HD on ata0-0: '80m.img', 'flat' mode
+00000000000i[IMG   ] hd_size: 83607552
+00000000000i[HD    ] ata0-0: using specified geometry: CHS=162/16/63
+00000000000i[HD    ] translation on ata0-0 set to 'none'
 00000000000i[PLUGIN] init_dev of 'pci_ide' plugin device by virtual method
 00000000000i[DEV   ] PIIX3 PCI IDE controller present at device 1, function 1
 00000000000i[PLUGIN] init_dev of 'unmapped' plugin device by virtual method
@@ -81,7 +85,6 @@
 00000000000i[PAR   ] parallel port 1 at 0x0378 irq 7
 00000000000i[PLUGIN] init_dev of 'serial' plugin device by virtual method
 00000000000i[SER   ] com1 at 0x03f8 irq 4 (mode: null)
-00000000000i[PLUGIN] init_dev of 'iodebug' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'pci' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'pci2isa' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'cmos' plugin device by virtual method
@@ -96,7 +99,6 @@
 00000000000i[PLUGIN] register state of 'extfpuirq' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'parallel' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'serial' plugin device by virtual method
-00000000000i[PLUGIN] register state of 'iodebug' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'acpi' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'ioapic' plugin device by virtual method
 00000000000i[PLUGIN] register state of 'keyboard' plugin device by virtual method
@@ -139,8 +141,6 @@
 00000000000i[PLUGIN] reset of 'extfpuirq' plugin device by virtual method
 00000000000i[PLUGIN] reset of 'parallel' plugin device by virtual method
 00000000000i[PLUGIN] reset of 'serial' plugin device by virtual method
-00000000000i[PLUGIN] reset of 'iodebug' plugin device by virtual method
-00000000000i[      ] set SIGINT handler to bx_debug_ctrlc_handler
 00000004662i[BIOS  ] $Revision: 13073 $ $Date: 2017-02-16 22:43:52 +0100 (Do, 16. Feb 2017) $
 00000318050i[KBD   ] reset-disable command received
 00000320819i[BIOS  ] Starting rombios32
@@ -149,7 +149,7 @@
 00000322261i[BIOS  ] ram_end=32MB
 00000362829i[BIOS  ] Found 1 cpu(s)
 00000376413i[BIOS  ] bios_table_addr: 0x000f9cd8 end=0x000fcc00
-00000601816i[XGUI  ] charmap update. Font is 9 x 16
+00000667552i[XGUI  ] charmap update. Font is 9 x 16
 00000704208i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
 00001032137i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0b
 00001032156i[P2ISA ] PCI IRQ routing: PIRQB# set to 0x09
@@ -181,26 +181,30 @@
 00001528657i[BXVGA ] VBE known Display Interface b0c0
 00001528689i[BXVGA ] VBE known Display Interface b0c5
 00001531614i[VBIOS ] VBE Bios $Id: vbe.c,v 1.65 2014/07/08 18:02:25 vruppert Exp $
-00001921912i[XGUI  ] charmap update. Font is 9 x 16
-00014040187i[BIOS  ] Booting from 0000:7c00
-01506324000p[XGUI  ] >>PANIC<< POWER button turned off.
-01506324000i[CPU0  ] CPU is in protected mode (active)
-01506324000i[CPU0  ] CS.mode = 32 bit
-01506324000i[CPU0  ] SS.mode = 32 bit
-01506324000i[CPU0  ] EFER   = 0x00000000
-01506324000i[CPU0  ] | EAX=00000000  EBX=00037000  ECX=000007d0  EDX=00000014
-01506324000i[CPU0  ] | ESP=00037fa8  EBP=0004807c  ESI=00062058  EDI=00000000
-01506324000i[CPU0  ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf ZF af PF cf
-01506324000i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
-01506324000i[CPU0  ] |  CS:0018( 0003| 0|  0) 00000000 ffffffff 1 1
-01506324000i[CPU0  ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-01506324000i[CPU0  ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-01506324000i[CPU0  ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-01506324000i[CPU0  ] |  FS:000f( 0001| 1|  3) 00000000 ffffffff 1 1
-01506324000i[CPU0  ] |  GS:000b( 0001| 0|  3) 000b8000 0000ffff 0 0
-01506324000i[CPU0  ] | EIP=00030770 (00030770)
-01506324000i[CPU0  ] | CR0=0xe0000011 CR2=0x00000000
-01506324000i[CPU0  ] | CR3=0x00100000 CR4=0x00000000
-01506324000i[CMOS  ] Last time is 1543480790 (Thu Nov 29 16:39:50 2018)
-01506324000i[XGUI  ] Exit
-01506324000i[SIM   ] quit_sim called with exit code 1
+00001876058i[BIOS  ] ata0-0: PCHS=162/16/63 translation=none LCHS=162/16/63
+00002644796i[XGUI  ] charmap update. Font is 9 x 16
+00005323152i[BIOS  ] IDE time out
+00017555415i[BIOS  ] Booting from 0000:7c00
+00855604000p[XGUI  ] >>PANIC<< POWER button turned off.
+00855604000i[CPU0  ] CPU is in protected mode (active)
+00855604000i[CPU0  ] CS.mode = 32 bit
+00855604000i[CPU0  ] SS.mode = 32 bit
+00855604000i[CPU0  ] EFER   = 0x00000000
+00855604000i[CPU0  ] | EAX=00000019  EBX=00037000  ECX=00000002  EDX=00057f5c
+00855604000i[CPU0  ] | ESP=00058084  EBP=0005808c  ESI=00034743  EDI=00057f71
+00855604000i[CPU0  ] | IOPL=1 id vip vif ac vm rf nt of df IF tf sf zf af PF cf
+00855604000i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
+00855604000i[CPU0  ] |  CS:0005( 0000| 1|  1) 00000000 ffffffff 1 1
+00855604000i[CPU0  ] |  DS:000d( 0001| 1|  1) 00000000 ffffffff 1 1
+00855604000i[CPU0  ] |  SS:000d( 0001| 1|  1) 00000000 ffffffff 1 1
+00855604000i[CPU0  ] |  ES:000d( 0001| 1|  1) 00000000 ffffffff 1 1
+00855604000i[CPU0  ] |  FS:000d( 0001| 1|  1) 00000000 ffffffff 1 1
+00855604000i[CPU0  ] |  GS:0009( 0001| 0|  1) 000b8000 0000ffff 0 0
+00855604000i[CPU0  ] | EIP=00030b4f (00030b4f)
+00855604000i[CPU0  ] | CR0=0xe0000011 CR2=0x00000000
+00855604000i[CPU0  ] | CR3=0x00100000 CR4=0x00000000
+00855604000i[CPU0  ] 0x00030b4f>> jmp .-2 (0x00030b4f) : EBFE
+00855604000i[CMOS  ] Last time is 1543668608 (Sat Dec  1 20:50:08 2018)
+00855604000i[XGUI  ] Exit
+00855604000i[      ] restoring default signal behavior
+00855604000i[SIM   ] quit_sim called with exit code 1

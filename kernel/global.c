@@ -10,7 +10,9 @@
 
 PUBLIC TASK task_table[NR_TASKS] = {
 	{task_tty,STACK_SIZE_TTY,"tty"},
-	{task_sys,STACK_SIZE_SYS_TASK,"task_sys"}
+	{task_sys,STACK_SIZE_SYS_TASK,"task_sys"},
+	{task_hd,STACK_SIZE_HD,"task_hd"},
+	{task_fs,STACK_SIZE_FS,"task_fs"}
 };
 
 PUBLIC TASK user_proc_table[NR_PROCS] = {

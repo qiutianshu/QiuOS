@@ -10,11 +10,15 @@ CC		=	gcc
 ASMBFLAGS	=	-I boot/include/
 ASMKFLAGS	=   -f elf -I include/
 CFLAGS		=	-c -I include/ -m32
-LDFLAGS		=	-s -m elf_i386 -Ttext 0x30400
+LDFLAGS		=  -m elf_i386 -Ttext 0x30400
 
 #This program
 QiuOSBOOT	=	boot/boot.bin	boot/loader.bin
-OBJS		=	lib/kliba.o 	kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protect.o lib/klib.o kernel/main.o kernel/global.o kernel/clock.o kernel/syscall.o kernel/proc.o kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o
+OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protect.o \
+				lib/klib.o kernel/main.o kernel/global.o kernel/clock.o kernel/syscall.o kernel/proc.o \
+				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
+				kernel/hd.o kernel/fs.o
+
 QiuOSKERNEL	=	kernel/kernel.bin
 
 .PHONY:		everything clean all bulidimg
@@ -87,11 +91,16 @@ kernel/i8259.o:kernel/i8259.c include/const.h include/type.h include/protect.h i
 kernel/clock.o:kernel/clock.c include/const.h include/type.h include/protect.h include/proto.h include/proc.h include/global.h
 			$(CC) $(CFLAGS) -o $@ $<
 
+kernel/fs.o:kernel/fs.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
+
 lib/klib.o:lib/klib.c include/proto.h include/const.h include/type.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 lib/misc.o:lib/misc.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h
 			$(CC) $(CFLAGS) -o $@ $<
 
-kernel/kernel.bin:lib/klib.o lib/kliba.o kernel/kernel.o kernel/start.o kernel/protect.o kernel/i8259.o kernel/main.o kernel/global.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/printf.o kernel/keyboard.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o kernel/protect.o kernel/i8259.o lib/klib.o lib/kliba.o kernel/global.o
+kernel/kernel.bin:$(OBJS)
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/fs.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/printf.o kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o kernel/protect.o kernel/i8259.o lib/klib.o lib/kliba.o kernel/global.o

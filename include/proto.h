@@ -16,10 +16,10 @@ PUBLIC void TestC();
 PUBLIC void task_tty();
 PUBLIC void memset(void* dest,char chr,int size);
 PUBLIC void strcpy(void* dest, void* src);
-PUBLIC void clock_handler();
+PUBLIC void clock_handler();									
 PUBLIC void disable_irq(int irq);
 PUBLIC void enable_irq(int irq);
-PUBLIC void put_irq_handler(int irq, irq_handler handler);
+PUBLIC void put_irq_handler(int irq, irq_handler handler);		//设置中断向量表
 PUBLIC void milli_delay(int milli_sec);							//毫秒延时函数
 PUBLIC void keyboard_handler();									//键盘中断处理
 PUBLIC void keyboard_read(TTY* p_tty);							//tty任务读取键盘输入
@@ -27,6 +27,7 @@ PUBLIC void init_keyboard();
 PUBLIC void init_clock();
 PUBLIC void disable_int();										//关中断
 PUBLIC void enable_int();										//开中断
+PUBLIC void hd_handler();										//硬盘中断处理
 PUBLIC void in_process(TTY* p_tty, u32 key);
 PUBLIC void disp_char(CONSOLE* p_cone,char ch);
 PUBLIC void set_cursor(unsigned int position);
@@ -39,8 +40,11 @@ PUBLIC void* va2la(int pid, void* va);
 PUBLIC void reset_msg(MESSAGE* msg);
 PUBLIC int send_rec(int funtion, int sec_dest, MESSAGE* msg);	//封装了sendrec
 PUBLIC void panic(char* fmt, ...);
+PUBLIC void port_read(int port, char* buf, int size);			//从端口读消息
 
 PUBLIC void task_sys();											//系统进程
+PUBLIC void task_hd();											//硬盘驱动
+PUBLIC void task_fs();											//文件系统
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();

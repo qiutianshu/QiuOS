@@ -26,11 +26,11 @@ else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
 #define RECEIVE			2
 #define BOTH			3	
 
-#define TASK_SYS		1
 
 enum msgtype{						//消息类型
 	HARD_INT	=	1,
 	GET_TICKS,
+	DEV_OPEN
 };
 
 /*VGA显示设置*/
@@ -78,7 +78,7 @@ enum msgtype{						//消息类型
 #define	INT_M_CTLMASK		0x21
 #define INT_S_CTL			0xa0
 #define	INT_S_CTLMASK		0xa1
-#define EOI                 0x20    
+#define EOI                 0x20  
 
 #define IRQ0				0x20
 #define	IRQ8				0x28
@@ -86,8 +86,12 @@ enum msgtype{						//消息类型
 #define NR_IRQ				0x10			//中断数量
 #define NR_SYS_CALL			0x10			//系统调用数量
 
+
 //中断号
-#define KEYBOARD_IRQ		0x1 			//键盘
+#define CLOCK_IRQ			0
+#define KEYBOARD_IRQ		1 				//键盘
+#define EN_SLAVER			2 				//从片使能
+#define HD_IRQ				14				//硬盘 
 
 //中断向量
 #define	INT_VECTOR_DIVIDE			0x0
@@ -109,18 +113,23 @@ enum msgtype{						//消息类型
 #define INT_VECTOR_SYS_CALL			0x90
 
 
-#define CLOCK_IRQ					0x0
-
 //进程相关常量
-#define NR_TASKS					2		//任务数量
+#define NR_TASKS					4		//任务数量
 #define NR_PROCS					3		//用户进程数
+
+#define TASK_TTY					0		//TTY任务
+#define TASK_SYS					1		//系统进程号
+#define TASK_HD						2		//硬盘驱动进程号
+#define TASK_FS						3		//文件系统
 
 #define STACK_SIZE_TESTA            0x8000
 #define STACK_SIZE_TESTB            0x8000
 #define STACK_SIZE_TESTC            0x8000
 #define STACK_SIZE_TTY				0x8000
 #define STACK_SIZE_SYS_TASK			0x8000
-#define STACK_SIZE_TOTAL			(STACK_SIZE_TESTA+ STACK_SIZE_TESTB+ STACK_SIZE_TESTC+ STACK_SIZE_TTY+ STACK_SIZE_SYS_TASK)
+#define STACK_SIZE_HD				0x8000
+#define STACK_SIZE_FS				0x8000
+#define STACK_SIZE_TOTAL			(STACK_SIZE_FS+ STACK_SIZE_HD+ STACK_SIZE_TESTA+ STACK_SIZE_TESTB+ STACK_SIZE_TESTC+ STACK_SIZE_TTY+ STACK_SIZE_SYS_TASK)
 
 //描述符相关常量
 #define DA_32	0x4000				//32位段

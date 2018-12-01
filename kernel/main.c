@@ -96,10 +96,10 @@ PUBLIC int kernel_main(){
 void TestA(){
 	MESSAGE msg;
 	while(1){
-		reset_msg(&msg);
-		msg.type = GET_TICKS;
-		send_recv(BOTH, TASK_SYS, &msg);
-		printf("<Ticks:%d> ", msg.RETVAL);
+//		reset_msg(&msg);
+//		msg.type = GET_TICKS;
+//		send_recv(BOTH, TASK_SYS, &msg);
+//		printf("<Ticks:%d> ", msg.RETVAL);
 		milli_delay(200);					//20 ticks，打印下一个A之前发生20次时钟中断
 	}
 }
@@ -112,8 +112,6 @@ void TestB(){
 
 void TestC(){
 	while(1){
-	//	disp_color_str("C",0xd);
-	//	disp_str(" ");
 		milli_delay(200);
 	}
 }
