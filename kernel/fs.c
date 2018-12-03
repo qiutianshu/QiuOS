@@ -11,6 +11,7 @@
 PUBLIC void task_fs(){
 	MESSAGE msg;
 	msg.type = DEV_OPEN;
-	send_recv(BOTH, TASK_HD, &msg);
+	msg.DEVICE = MINOR(ROOT_DEV);						
+	send_recv(BOTH, dd[MAJOR(ROOT_DEV)].drv_pid, &msg);		//发送根设备请求
 	spin("FS loop");
 }

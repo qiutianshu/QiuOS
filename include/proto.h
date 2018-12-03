@@ -40,7 +40,7 @@ PUBLIC void* va2la(int pid, void* va);
 PUBLIC void reset_msg(MESSAGE* msg);
 PUBLIC int send_rec(int funtion, int sec_dest, MESSAGE* msg);	//封装了sendrec
 PUBLIC void panic(char* fmt, ...);
-PUBLIC void port_read(int port, char* buf, int size);			//从端口读消息
+PUBLIC void port_read(int port, void* buf, int size);			//从端口读消息
 
 PUBLIC void task_sys();											//系统进程
 PUBLIC void task_hd();											//硬盘驱动

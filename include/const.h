@@ -117,6 +117,7 @@ enum msgtype{						//消息类型
 #define NR_TASKS					4		//任务数量
 #define NR_PROCS					3		//用户进程数
 
+#define UNUSED						-10
 #define TASK_TTY					0		//TTY任务
 #define TASK_SYS					1		//系统进程号
 #define TASK_HD						2		//硬盘驱动进程号

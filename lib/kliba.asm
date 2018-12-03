@@ -158,9 +158,9 @@ memset:
 	push edi
 	push ebx
 
-	mov ecx,[ebp+12]		;size
-	mov ebx,[ebp+8]			;char
-	mov edi,[ebp+4]			;dest
+	mov ecx,[ebp+16]		;size
+	mov ebx,[ebp+12]			;char
+	mov edi,[ebp+8]			;dest
 .1:
 	cmp ecx,0
 	je .2

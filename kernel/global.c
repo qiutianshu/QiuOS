@@ -6,6 +6,7 @@
 #include "protect.h"
 #include "proc.h"
 #include "proto.h"
+
 #include "global.h"
 
 PUBLIC TASK task_table[NR_TASKS] = {
@@ -26,3 +27,9 @@ PUBLIC system_call sys_call_table[NR_SYS_CALL] = {sys_get_ticks, sys_write, sys_
 
 PUBLIC TTY tty_table[NR_CONSOLES];
 PUBLIC CONSOLE console_table[NR_CONSOLES];
+PUBLIC struct dev_drv_map dd[] = {					/*顺序必须与pid一致*/
+	{TASK_TTY},								//TTY任务
+	{UNUSED},								//预留
+	{TASK_HD}								//硬盘驱动
+};
+//PUBLIC struct hd_info 	hdinfo[1];

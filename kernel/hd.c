@@ -8,6 +8,8 @@
 #include "hd.h"
 #include "global.h"
 
+PRIVATE struct hd_info 	hdinfo[1];
+PRIVATE char hdbuf[512];
 
 PRIVATE void interrupt_wait(){
 	MESSAGE msg;
@@ -16,11 +18,16 @@ PRIVATE void interrupt_wait(){
 
 PRIVATE void init_hd(){
 	u8* NR_DISK = (u8*) 0x475;						//从物理地址0x475处读取硬盘数量
+	int i;
 	printl("%d disks found \n", *NR_DISK);
 
 	put_irq_handler(HD_IRQ, hd_handler);			//设置硬盘中断
 	enable_irq(EN_SLAVER);							//打开从片
 	enable_irq(HD_IRQ);								//打开硬盘中断
+
+	for(i = 0; i < (sizeof(hdinfo)/sizeof(hdinfo[0])); i++){
+		memset(&hdinfo[i], 0, sizeof(hdinfo[0]));
+	}
 }
 
 PRIVATE int waitforhd(int mili_timeout){			//等待硬盘准备好
@@ -75,18 +82,104 @@ PRIVATE void hd_info_print(char* buf){
 	printl("Capacity is : %d Mb\n", capacity / 2048);
 }
 
+PRIVATE void get_part_table(int drive, int sector, struct part_table_ent* entry){
+	CMD cmd;
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.features = 0;
+	cmd.sector_num = 1;
+	cmd.lba_low = sector & 0xff;
+	cmd.lba_mid = (sector >> 8) & 0xff;
+	cmd.lba_high = (sector >> 16) & 0xff;
+	cmd.device = SET_DEVICE_REG(((sector >> 24) & 0xf), drive, 1);		//LBA模式
+	cmd.cmd = READ;
+	send_cmd_ata0(&cmd);
+
+	interrupt_wait();
+	port_read(ATA0_DATA, hdbuf, 512);						//读取一个扇区
+	char* ptr = hdbuf + 0x1be;
+	memcpy(entry, ptr, sizeof(struct part_table_ent) * NR_PART_PER_DIV);
+}
+
+PRIVATE void partition(int device){
+	int drive = DEV_TO_DIV(device);
+	int i,j;
+	int k = 1;									//指向下一个要写的part_table,primary[0]留给hd0
+	struct hd_info* h = &hdinfo[drive];
+	struct part_table_ent part_table[NR_SUB_PER_DIV];			//64
+
+	get_part_table(drive, 0, part_table);		//获得mbr分区表
+
+	for(i = 0; i < NR_PART_PER_DIV; i++){
+		if(part_table[i].system_id == 0)
+			continue;
+		
+		h->primary[i + 1].base = part_table[i].init_lba;				
+		h->primary[i + 1].size = part_table[i].nr_sector;									
+		h->primary[i + 1].flag = PRIMARY;
+
+		if(part_table[i].system_id == 0x5){							//扩展分区
+			h->primary[i + 1].flag = EXTEND;
+			int ext_start_sector = part_table[i].init_lba;			//主分区表中扩展分区的起始位置
+			int s = ext_start_sector;
+			int nr_1st_sub = i * NR_SUB_PER_PART;					//扩展分区第一个逻辑分区次设备号0,16,32,48
+			int nr_ext;
+			for(j = 0; j < NR_SUB_PER_PART; j++){
+				nr_ext = j + nr_1st_sub;							//当前逻辑分区次设备号
+				get_part_table(drive, s, &part_table[4]);			//0-3装主分区表
+				h->extend[nr_ext].base = s + part_table[4].init_lba;
+				h->extend[nr_ext].size = part_table[4].nr_sector;
+				h->extend[nr_ext].flag = LOGICAL;	
+				s = ext_start_sector + part_table[5].init_lba;		//mbr指示的扩展分区起始地址起算
+
+				if(part_table[5].system_id == 0)
+					break;
+			}
+		}		
+	}
+}
+
+PRIVATE void print_partition(struct hd_info* h){					//打印分区表
+	int i;
+	for(i = 0; i < NR_PRIME_PER_DIV; i++)
+		printl("%shd%d:  base %d, size %d sectors %d MB           %s\n ",i == 0 ? "\n":"    ",
+			    i, h->primary[i].base, 
+			    h->primary[i].size, 
+			    h->primary[i].size / 2048,
+			    h->primary[i].flag == EXTEND ? "Extend" : "Primary");
+
+	for(i = 0; i < NR_SUB_PER_DIV; i++){
+		if(h->extend[i].size == 0)
+			continue;
+		printl("    hd%d%c: base %d, size %d sectors %d MB           Logical\n ",
+				1 + i / 16,
+				'a' + i % 16,
+			 	h->extend[i].base,
+			  	h->extend[i].size,
+			  	h->extend[i].size / 2048);
+	}
+}
+
+PRIVATE void hd_open(int device){
+	int drive = DEV_TO_DIV(device);				//获得驱动号
+	if(hdinfo[drive].open_cnt == 0){			//先判断是否打开，再自加1
+		hdinfo[drive].open_cnt++;
+		partition(drive * (NR_PRIME_PER_DIV));	
+		print_partition(&hdinfo[drive]);
+	}
+}
+
 PUBLIC void task_hd(){
 	MESSAGE msg;
 
-	init_hd();						//初始化硬盘
+	init_hd();						
 
 	while(1){
 		send_recv(RECEIVE, ANY, &msg);
 		int src = msg.source;
 		switch(msg.type){
 			case DEV_OPEN:
-
-				hd_identity(0);
+				hd_identity();
+				hd_open(msg.DEVICE);
 				break;
 			default:
 				printl("Unknown message type : %d\n",DEV_OPEN);
@@ -107,6 +200,8 @@ PUBLIC void hd_identity(int device){
 	interrupt_wait();
 	port_read(ATA0_DATA, buf, 512);						//读取256个字
 	hd_info_print(buf);
+	hdinfo[device].primary[0].base = 0;
+	hdinfo[device].primary[0].size = (int)(*(u16*)(&buf[122]) << 16) + (u16)*(u16*)(&buf[120]);
 }
 
 PUBLIC void hd_handler(){

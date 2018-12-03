@@ -41,11 +41,12 @@ PUBLIC int vsprintf(char* buf, char* fmt, char* argv){
 				break;
 			case 'd':
 				tmp_int = *((int*)p_next_arg);
-				while(tmp_int){
+				do{
 					*q++ = '0' + tmp_int % 10;
 					tmp_int = (tmp_int - tmp_int % 10) / 10;
 					length++;
-				}
+				}while(tmp_int != 0);
+
 				while(length)
 					*p++ = tmp[--length];
 				

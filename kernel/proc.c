@@ -103,7 +103,6 @@ PRIVATE int send_msg(PROCESS* p_proc, int dest, MESSAGE* msg){
 		p_dest->p_flags &= ~RECEIVING;
 		p_dest->p_recvfrom = NO_TASK;
 		unblock(p_dest);
-
 		assert(p_dest->p_flags == 0);							//确保B进程相关标志清除
 		assert(p_dest->p_msg == 0);
 		assert(p_dest->p_recvfrom == NO_TASK);
@@ -167,15 +166,14 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 		assert(p_recv->p_msg == 0);
 		assert(p_recv->p_sendto == NO_TASK);
 		assert(p_recv->has_int_msg == 0);
-
 		return 0;
+
 	}
 
 	if((!(p_recv->has_int_msg)) && (src == INTERRUPT)){		//中断消息还没来
 		p_recv->p_flags |= RECEIVING;					
 		p_recv->p_msg = msg;
 		p_recv->p_recvfrom = INTERRUPT;
-
 		block(p_recv);									
 
 		assert(p_recv->p_flags == RECEIVING);	
@@ -186,7 +184,6 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 
 		return 0;
 	}
-
 	if(src == ANY){												
 		if(p_recv->q_sending){									//消息队列不为空
 			p_from = p_recv->q_sending;
@@ -310,7 +307,7 @@ PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p){
 PUBLIC void info_task(int pid){
 	PROCESS* p = proc_table + pid;
 	if((p->p_flags == RECEIVING) && (p->p_recvfrom == INTERRUPT || p->p_recvfrom == ANY)){			//B进程等待接收中断消息
-		p->p_flags = ~RECEIVING;
+		p->p_flags &= ~RECEIVING;
 		p->p_msg = 0;
 		p->p_recvfrom = NO_TASK;
 		p->p_sendto = NO_TASK;
