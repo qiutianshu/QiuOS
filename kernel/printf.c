@@ -69,3 +69,9 @@ PUBLIC int vsprintf(char* buf, char* fmt, char* argv){
 	}
 	return (p - buf);
 }
+
+PUBLIC int sprintf(char *buf, const char *fmt, ...){
+	char* arg = (char*)((char*)(&fmt) + 4);      
+	return vsprintf(buf, fmt, arg);
+}
+

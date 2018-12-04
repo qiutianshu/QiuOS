@@ -12,6 +12,7 @@ global strcpy
 global disable_int
 global enable_int 
 global port_read
+global port_write
 ;--------------------------------------------------------------------------------------
 ;				void disp_str(char* str)
 ;--------------------------------------------------------------------------------------
@@ -219,4 +220,16 @@ port_read:
 	shr ecx, 1						;字 
 	cld
 	rep insw
+	ret
+
+;--------------------------------------------------------------------------------------------
+;		void port_write(int port, char* buf, int size)
+;--------------------------------------------------------------------------------------------
+port_write:
+	mov edx, [esp + 4]				;port
+	mov esi, [esp + 8]				;buf
+	mov ecx, [esp + 12]				;size
+	shr ecx, 1
+	cld
+	rep outsw
 	ret

@@ -34,13 +34,15 @@ PUBLIC void set_cursor(unsigned int position);
 PUBLIC void switch_console(int nr_console);						//切换控制台
 PUBLIC void scroll_screen(CONSOLE* p_cone,int direction);		//翻屏
 PUBLIC int printf(char* fmt, ...);
-PUBLIC int vsprintf(char* buf, char* fmt, char* argv);			
+PUBLIC int vsprintf(char* buf, char* fmt, char* argv);
+PUBLIC int sprintf(char *buf, const char *fmt, ...);		
 PUBLIC int ldt_seg_linear(PROCESS* p, int idx);
 PUBLIC void* va2la(int pid, void* va);
 PUBLIC void reset_msg(MESSAGE* msg);
 PUBLIC int send_rec(int funtion, int sec_dest, MESSAGE* msg);	//封装了sendrec
 PUBLIC void panic(char* fmt, ...);
 PUBLIC void port_read(int port, void* buf, int size);			//从端口读消息
+PUBLIC void port_write(int port, void* buf, int size);			//端口写
 
 PUBLIC void task_sys();											//系统进程
 PUBLIC void task_hd();											//硬盘驱动

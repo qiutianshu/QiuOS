@@ -11,6 +11,8 @@ else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
 
 #define printl			printf 		
 
+#define min(a,b)		(a < b) ? a : b
+
 #define MAG_CH_PANIC	0x02
 #define MAG_CH_ASSERT	0x03
 
@@ -30,8 +32,14 @@ else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
 enum msgtype{						//消息类型
 	HARD_INT	=	1,
 	GET_TICKS,
-	DEV_OPEN
+	DEV_OPEN,
+	DEV_CLOSE,
+	DEV_READ,
+	DEV_WRITE,
+	DEV_IOCTL
 };
+
+#define DIOCTL_GET_GEO	1
 
 /*VGA显示设置*/
 #define CRT_CTRL_REG	0x3d4		//地址寄存器

@@ -80,7 +80,7 @@ PUBLIC int kernel_main(){
 	/*指定进程对应的控制台*/
 	proc_table[1].nr_tty = 0;
 	proc_table[2].nr_tty = 0;
-	proc_table[3].nr_tty = 2;
+	proc_table[3].nr_tty = 0;
 
 	
 

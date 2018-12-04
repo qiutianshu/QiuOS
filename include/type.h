@@ -44,7 +44,12 @@ typedef struct {
 } MESSAGE;
 
 #define	RETVAL		u.m3.m3i1
-#define DEVICE		u.m3.m3i2
+#define DEVICE		u.m3.m3i2		//次设备号
+#define REQUEST		u.m3.m3i3
+#define PROC_NR		u.m3.m3i4
+#define POSITION	u.m3.m3l1
+#define COUNT		u.m3.m3l2		//BYTES
+#define BUF			u.m3.m3p1
 
 typedef struct dev_drv_map{
 	int drv_pid;					//主设备号映射到驱动

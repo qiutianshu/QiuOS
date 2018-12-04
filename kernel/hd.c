@@ -168,6 +168,72 @@ PRIVATE void hd_open(int device){
 	}
 }
 
+PRIVATE void hd_close(int device){
+	int drive = DEV_TO_DIV(device);
+	hdinfo[drive].open_cnt--;
+}
+
+PRIVATE void hd_rw(MESSAGE* msg){
+	int drive = DEV_TO_DIV(msg->DEVICE);
+	int device = msg->DEVICE;
+	int pos = msg->POSITION;					//相对扇区数
+	pos += msg->DEVICE <= NR_MAX_PRIME ? \
+			hdinfo[drive].primary[device].base : \
+			hdinfo[drive].extend[(msg->DEVICE - MINOR_hd1a) % NR_SUB_PER_DIV].base;
+	CMD cmd;
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.features = 0;
+	cmd.sector_num = (msg->COUNT + 512 -1) / 512;			//扇区数
+	cmd.lba_low = pos & 0xff;
+	cmd.lba_mid = (pos >> 8) % 0xff;
+	cmd.lba_high = (pos >> 16) % 0xff;
+	cmd.device = SET_DEVICE_REG((pos >> 24) & 0xf, drive, 1);
+	cmd.cmd = (msg->type == DEV_READ) ? READ : WRITE;
+	send_cmd_ata0(&cmd);
+
+	int left = msg->COUNT;
+	void* la = va2la(msg->PROC_NR, msg->BUF);
+	while(left){
+		int bytes = min(512,left);
+		if(msg->type == DEV_READ){
+			interrupt_wait();
+			port_read(ATA0_DATA,hdbuf ,512);
+			phy_cpy(la, (void*)va2la(TASK_HD, hdbuf), bytes);
+		}
+		else{
+			int t = get_ticks();
+			while(1){
+				if((get_ticks() - t ) * 1000 / HZ <= HD_TIMEOUT){
+					if(in_byte(ATA0_STATUS_CMD) & 0x08)
+						break;
+				}
+				else
+					panic("hd wait timeout *!");
+			}
+					
+			port_write(ATA0_DATA, la, bytes);
+			interrupt_wait();
+		}
+		left -= bytes;
+		la += bytes;
+	}
+}
+
+PRIVATE void hd_ioctl(MESSAGE* msg){							//返回设备的起始扇区和大小
+	int drive = DEV_TO_DIV(msg->DEVICE);
+	int device = msg->DEVICE;
+	if(msg->REQUEST == DIOCTL_GET_GEO){
+		void* dest = va2la(msg->PROC_NR, msg->BUF);
+		void* src  = va2la(TASK_HD,
+							msg->DEVICE <= NR_MAX_PRIME ?
+							&hdinfo[drive].primary[device] :
+							&hdinfo[drive].extend[(msg->DEVICE - MINOR_hd1a) % NR_SUB_PER_DIV]);
+		phy_cpy(dest, src, sizeof(struct part_table_ent));
+	}
+	else 
+		assert(0);
+}
+
 PUBLIC void task_hd(){
 	MESSAGE msg;
 
@@ -180,6 +246,16 @@ PUBLIC void task_hd(){
 			case DEV_OPEN:
 				hd_identity();
 				hd_open(msg.DEVICE);
+				break;
+			case DEV_CLOSE:
+				hd_close(msg.DEVICE);
+				break;
+			case DEV_READ:
+			case DEV_WRITE:
+				hd_rw(&msg);
+				break;
+			case DEV_IOCTL:
+				hd_ioctl(&msg);
 				break;
 			default:
 				printl("Unknown message type : %d\n",DEV_OPEN);

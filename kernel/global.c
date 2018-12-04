@@ -32,4 +32,7 @@ PUBLIC struct dev_drv_map dd[] = {					/*顺序必须与pid一致*/
 	{UNUSED},								//预留
 	{TASK_HD}								//硬盘驱动
 };
-//PUBLIC struct hd_info 	hdinfo[1];
+
+/*FS缓冲区  6M-7M   */
+PUBLIC u8*	fsbuf			=	(u8*)0x600000;
+PUBLIC const int FSBUF_SIZE	= 0x100000;
