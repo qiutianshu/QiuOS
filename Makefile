@@ -17,7 +17,7 @@ QiuOSBOOT	=	boot/boot.bin	boot/loader.bin
 OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protect.o \
 				lib/klib.o kernel/main.o kernel/global.o kernel/clock.o kernel/syscall.o kernel/proc.o \
 				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
-				kernel/hd.o kernel/fs.o
+				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
@@ -91,7 +91,13 @@ kernel/i8259.o:kernel/i8259.c include/const.h include/type.h include/protect.h i
 kernel/clock.o:kernel/clock.c include/const.h include/type.h include/protect.h include/proto.h include/proc.h include/global.h
 			$(CC) $(CFLAGS) -o $@ $<
 
-kernel/fs.o:kernel/fs.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
+fs/fs.o:fs/fs.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+fs/open.o:fs/open.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+lib/usr/open.o:lib/usr/open.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
@@ -103,4 +109,7 @@ lib/misc.o:lib/misc.c include/const.h include/type.h include/protect.h include/g
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/kernel.bin:$(OBJS)
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/fs.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/printf.o kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o kernel/protect.o kernel/i8259.o lib/klib.o lib/kliba.o kernel/global.o
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o lib/usr/open.o \
+			fs/fs.o fs/open.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/printf.o kernel/keyboard.o \
+			kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o kernel/protect.o kernel/i8259.o \
+			lib/klib.o lib/kliba.o kernel/global.o

@@ -28,9 +28,9 @@ struct inode{
 	u32		i_nr_sects;					//文件预留扇区
 	u8		_unused[16];				//对齐
 
-	int 	i_dev;
-	int 	i_cnt;
-	int 	i_num;
+	int 	i_dev;						//属于哪个设备
+	int 	i_cnt;						//多少个进程正在使用
+	int 	i_num;						//本inode位置
 };
 
 #define INODE_SIZE 				32 		//inode结构在磁盘中的大小
@@ -39,8 +39,14 @@ struct inode{
 #define	NR_DEFAULT_FILE_SECTS	2048 	//根目录预留扇区数
 
 struct dir_entry{
-	int 	inode_nr;					//
+	int 	inode_nr;					//文件起始扇区号
 	char 	name[MAX_FILENAME_LEN];
+};
+
+typedef struct file_desc{				//文件描述符
+	int 				fd_mode;
+	int 				fd_pos;		
+	struct inode* 		fd_inode;		//指向inode_table中元素
 };
 
 #define DIR_ENTRY_SIZE		sizeof(struct dir_entry)
@@ -55,3 +61,12 @@ struct dir_entry{
 
 #define DEV_CHAR_TTY	TASK_TTY 
 
+#define MAX_PATH		128				//路径最大长度
+#define MAX_NAME 		12				//文件名最大长度
+#define NR_FILES 		64				//最大文件打开数
+#define NR_FILE_DESC	64				//文件描述符数量
+#define NR_INODES 		64 				//inode_table中元素数量
+#define NR_SUPER_BLOCK	8				//超级块数量
+
+#define O_CREATE		1
+#define O_RW 			2

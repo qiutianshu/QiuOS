@@ -48,6 +48,21 @@ PUBLIC void task_sys();											//系统进程
 PUBLIC void task_hd();											//硬盘驱动
 PUBLIC void task_fs();											//文件系统
 
+PUBLIC int do_open();											//打开文件
+PUBLIC int do_close();											//关闭文件
+PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode);
+PUBLIC void rw_sector(int type, int dev, int pos_in_sector, int bytes, int proc, void* buf);
+PUBLIC int search_file(char* path);								//搜索文件成功返回inode
+PUBLIC struct inode* create_file(char* path, int flag);
+PUBLIC void put_inode(struct inode* pnode);
+PUBLIC void sync_inode(struct inode* pode);
+PUBLIC struct inode* get_inode(int dev, int num);
+PUBLIC struct super_block* get_super_block(int dev);
+PUBLIC void read_super_block(int dev);
+
+PUBLIC int open(char* filepath, int flag);
+PUBLIC int close(int fd);
+
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
 PUBLIC int get_ticks();											//用户调用接口

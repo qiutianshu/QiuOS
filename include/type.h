@@ -47,13 +47,18 @@ typedef struct {
 #define DEVICE		u.m3.m3i2		//次设备号
 #define REQUEST		u.m3.m3i3
 #define PROC_NR		u.m3.m3i4
-#define POSITION	u.m3.m3l1
-#define COUNT		u.m3.m3l2		//BYTES
+#define POSITION	u.m3.m3l1		//IN SECTOR
+#define COUNT		u.m3.m3l2		//读取字节数BYTES 
 #define BUF			u.m3.m3p1
+
+#define PATHNAME	u.m3.m3p2		//文件操作
+#define FLAGS		u.m3.m3i1
+#define NAME_LEN	u.m3.m3i2
+#define FD			u.m3.m3i3
+
 
 typedef struct dev_drv_map{
 	int drv_pid;					//主设备号映射到驱动
 };			
-
 
 #endif

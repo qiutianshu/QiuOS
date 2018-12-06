@@ -24,6 +24,14 @@ EXTERN int ticks;
 
 EXTERN int current_console;				//当前控制台
 
+EXTERN MESSAGE fs_msg;
+
+EXTERN struct file_desc file_desc_table[NR_FILE_DESC];		//文件描述符
+EXTERN struct inode 	inode_table[NR_INODES]; 			
+EXTERN	struct inode *		root_inode;
+EXTERN struct super_block super_block[NR_SUPER_BLOCK];
+EXTERN PROCESS* caller; 
+
 extern TASK task_table[];
 extern TASK user_proc_table[];
 extern irq_handler irq_table[];

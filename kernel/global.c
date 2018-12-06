@@ -1,6 +1,7 @@
 #define GLOBAL_VARIABLES_HERE 
 #include "type.h"
 #include "const.h"
+#include "fs.h"
 #include "tty.h"
 #include "console.h"
 #include "protect.h"

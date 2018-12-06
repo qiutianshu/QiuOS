@@ -1,5 +1,6 @@
 #include "type.h"
 #include "const.h"
+#include "fs.h"
 #include "tty.h"
 #include "console.h"
 #include "protect.h"
@@ -67,12 +68,15 @@ PUBLIC int kernel_main(){
 		p_proc->has_int_msg = 0;
 		p_proc->q_sending = 0;
 		p_proc->next_sending = 0;
+
+		for(int k = 0; k < NR_FILES; k++)
+			p_proc->filp[k] = 0;					//初始化文件打开表
 		
 		p_proc++;
 		p_task++;
 		selector_ldt +=1 << 3;
-
 		p_proc->nr_tty = 0;							//初始化指向0号
+
 	}
 	init_clock();									//初始化时钟
 	init_keyboard();								//初始化键盘
@@ -94,14 +98,10 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
-	MESSAGE msg;
-	while(1){
-//		reset_msg(&msg);
-//		msg.type = GET_TICKS;
-//		send_recv(BOTH, TASK_SYS, &msg);
-//		printf("<Ticks:%d> ", msg.RETVAL);
-		milli_delay(200);					//20 ticks，打印下一个A之前发生20次时钟中断
-	}
+	int fd = open("/qiutianshu", O_CREATE);
+	printl("fd: %d\n ",fd);
+	close(fd);
+	spin("Create File qiutianshu");
 }
 
 void TestB(){

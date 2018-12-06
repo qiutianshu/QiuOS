@@ -5,6 +5,11 @@
 #define PRIVATE static
 #define EXTERN	extern 
 
+/*主设备号*/
+#define NO_DEV			-1
+#define DEV_CHAR_TTY	0		//tty设备
+#define DEV_HD			2		//硬盘
+
 void assertion_failure(char* exp,char* file,char* base_file,int line);
 #define assert(exp)		if(exp);\
 else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
@@ -36,7 +41,12 @@ enum msgtype{						//消息类型
 	DEV_CLOSE,
 	DEV_READ,
 	DEV_WRITE,
-	DEV_IOCTL
+	DEV_IOCTL,
+	FILE_OPEN,
+	FILE_CLOSE,
+	FILE_WRITE,
+	FILE_READ, 
+	SYSCALL_RET
 };
 
 #define DIOCTL_GET_GEO	1
