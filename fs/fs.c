@@ -67,7 +67,7 @@ PRIVATE void mkfs(){
 	msg.REQUEST = DIOCTL_GET_GEO;
 	msg.BUF = &geo;
 	msg.PROC_NR = TASK_FS;
-	send_recv(BOTH, dd[MAJOR(ROOT_DEV)].drv_pid, &msg);
+	send_recv(BOTH, dd[MAJOR(ROOT_DEV)].drv_pid, &msg);			//获得根设备起始扇区和扇区数
 
 	printl("dev size: %d sectors\n ", geo.size);
 
@@ -97,6 +97,14 @@ PRIVATE void mkfs(){
 	memcpy(fsbuf, &sb, SUPER_BLOCK_SIZE);
 
 	rw_sector(DEV_WRITE, ROOT_DEV, 1, 512, TASK_FS, fsbuf);			//根设备第一扇区写入超级块
+
+	printl("super_block start at : %x \n inode map start at : %x \n sector map start at : %x \n inode array start at : %x \n root directory start at : %x \n data block start at : %x\n", 
+			(geo.base + 1) * 512, /*super block*/
+			(geo.base + 1 + 1) * 512 , /*inode map*/
+		    (geo.base + 2 + sb.nr_imap_sects) * 512, /*sector map*/
+		    (geo.base + 2 + sb.nr_smap_sects + sb.nr_imap_sects) * 512,  /*inode array*/
+		    (geo.base + 2 + sb.nr_smap_sects + sb.nr_imap_sects + sb.nr_inode_sects) * 512, /*root directory*/
+		    (geo.base + 2 + sb.nr_smap_sects + sb.nr_imap_sects + sb.nr_inode_sects + NR_DEFAULT_FILE_SECTS) * 512); /*data block*/
 
 	/*设置inode map*/
 	memset(fsbuf, 0, 512);

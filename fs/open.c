@@ -18,7 +18,7 @@ PRIVATE int alloc_imap_bit(int dev){
 	struct super_block* sb = get_super_block(dev);
 
 	for(i = 0; i < sb->nr_imap_sects; i++){
-		rw_sector(DEV_READ, dev, imap_blk0_nr + 1, 512, TASK_FS, fsbuf);			//读入一个扇区的inode_map
+		rw_sector(DEV_READ, dev, imap_blk0_nr + i, 512, TASK_FS, fsbuf);			//读入一个扇区的inode_map
 		for(j = 0; j < 512; j++){
 			if(fsbuf[j] == 0xff)
 				continue;
@@ -40,9 +40,9 @@ PRIVATE int alloc_smap_bit(int dev, int size_in_sector){
 	struct super_block* sb = get_super_block(dev);
 	int smap_blk0_nr = 2 + sb->nr_imap_sects;				//sector map起始扇区 = 引导扇区 + 超级块 + inode map
 	for(i = 0; i < sb->nr_smap_sects; i++){
-		k = 0;
 		rw_sector(DEV_READ, dev, smap_blk0_nr + i, 512,TASK_FS, fsbuf);
 		for(j = 0; j < 512 && nr_sects > 0; j++){
+			k = 0;
 			if(!free_sect_nr){
 				if(fsbuf[j] == 0xff)
 					continue;
