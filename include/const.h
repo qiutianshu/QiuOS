@@ -80,7 +80,7 @@ enum msgtype{						//消息类型
 	0=计数器使用二进制位，1=使用BCD码
 
 */
-
+ 
 
 //8253设置相关
 #define TIMER0				0x40 

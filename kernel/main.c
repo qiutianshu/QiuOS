@@ -98,10 +98,22 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
-	int fd = open("/qiutianshu", O_CREATE);
+	char buf[9];
+	int fd = open("/qts", O_CREATE | O_RW);			//新建QTS文件
 	printl("fd: %d\n ",fd);
+
+	int n = write(fd, "qwertyui", 8);
+	assert(n == 8);
+	
 	close(fd);
-	spin("Create File qiutianshu");
+
+	fd = open("/qts", O_RW);
+	n = read(fd, buf, 8);
+	assert(n == 8);
+	buf[8] = 0;
+	printl("content: %s\n ", buf);
+	close(fd);
+	spin("TESTA");
 }
 
 void TestB(){

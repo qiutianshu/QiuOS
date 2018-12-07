@@ -50,6 +50,8 @@ PUBLIC void task_fs();											//文件系统
 
 PUBLIC int do_open();											//打开文件
 PUBLIC int do_close();											//关闭文件
+PUBLIC int do_rw();												//文件读写
+
 PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode);
 PUBLIC void rw_sector(int type, int dev, int pos_in_sector, int bytes, int proc, void* buf);
 PUBLIC int search_file(char* path);								//搜索文件成功返回inode
@@ -62,13 +64,15 @@ PUBLIC void read_super_block(int dev);
 
 PUBLIC int open(char* filepath, int flag);
 PUBLIC int close(int fd);
+PUBLIC int write(int fd, void* buf, int count);
+PUBLIC int read(int fd, void* buf, int count);
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
 PUBLIC int get_ticks();											//用户调用接口
 PUBLIC int sys_get_ticks();										//中断处理例程
 
-PUBLIC void write(char* buf, int len);
+//PUBLIC void write(char* buf, int len);
 PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc);
 
 PUBLIC int sendrec(int function, int src_dest, MESSAGE* m);

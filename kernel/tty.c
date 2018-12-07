@@ -161,6 +161,8 @@ PUBLIC void set_cursor(unsigned int position){
 	enable_int();
 }
 
+/*
+						弃用
 PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc){
 	char* p = buf;
 	int i = len;
@@ -169,7 +171,7 @@ PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc){
 		i--;
 	}
 	return 0;
-}
+}*/
 
 PUBLIC int sys_printx(int unused1, int unused2, char* str, PROCESS* p_proc){
 	const char* p;

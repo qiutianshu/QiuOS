@@ -193,6 +193,10 @@ PUBLIC void task_fs(){
 			case FILE_CLOSE:
 				fs_msg.RETVAL = do_close();
 				break;
+			case FILE_READ:
+			case FILE_WRITE:
+				fs_msg.RETVAL = do_rw();
+				break;
 			default:
 				break;
 		}
