@@ -205,11 +205,19 @@ PUBLIC void task_fs(){
 			case FILE_WRITE:
 				fs_msg.RETVAL = do_rw();
 				break;
+			case FILE_DELETE:
+				fs_msg.RETVAL = do_unlink();
+				break;
+			case RESUME_PROC:
+				src = fs_msg.PROC_NR;
+				break;
 			default:
 				break;
 		}
-		fs_msg.type = SYSCALL_RET;
-		send_recv(SEND, src, &fs_msg);
+		if(fs_msg.type != SUSPEND_PROC){
+			fs_msg.type = SYSCALL_RET;
+			send_recv(SEND, src, &fs_msg);
+		}
 	}	
 }
 

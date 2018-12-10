@@ -18,7 +18,7 @@ PUBLIC int read(int fd, void* buf, int count){
 
 	send_recv(BOTH, TASK_FS, &msg);
 
-	return msg.RETVAL;
+	return msg.COUNT;
 }
 
 PUBLIC int write(int fd, void* buf, int count){
@@ -30,5 +30,5 @@ PUBLIC int write(int fd, void* buf, int count){
 
 	send_recv(BOTH, TASK_FS, &msg);
 
-	return msg.RETVAL;
+	return msg.COUNT;
 }

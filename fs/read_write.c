@@ -22,9 +22,13 @@ PUBLIC int do_rw(){
 
 	struct inode* p = caller->filp[fd]->fd_inode;
 
+	assert(p >= &inode_table[0] && p <= &inode_table[NR_INODES]);
+
 	/*检查文件描述符，防止出现未打开的读写*/
 	assert((caller->filp[fd] >= file_desc_table) && \
 			(caller->filp[fd] < &file_desc_table[NR_FILE_DESC]));
+
+
 
 	if(!(caller->filp[fd]->fd_mode & O_RW))
 		return -1;
@@ -33,8 +37,16 @@ PUBLIC int do_rw(){
 	int offset 		= f_pos % 512;	
 	int mode		= p->i_mode & I_TYPE_MASK;
 
-	if(mode == I_CHAR_SPECIAL){									//字符设备，有待完善
-		/*		TODO		*/
+	if(mode == I_CHAR_SPECIAL){											//字符设备，有待完善
+		int t = fs_msg.type == FILE_READ ? DEV_READ : DEV_WRITE;		//读写文件对应于字符设备的设备读写
+		int dev = p->i_start_sect;
+		assert(MAJOR(dev) == 0);										//tty设备
+		fs_msg.DEVICE = MINOR(dev);
+		fs_msg.PROC_NR = src;
+		fs_msg.type = t;
+		send_recv(BOTH, dd[MAJOR(dev)].drv_pid, &fs_msg);
+
+		return fs_msg.COUNT;
 	}
 	else{														//普通文件
 		assert((mode == I_REGULAR) || (mode == I_DIRECTORY));

@@ -174,7 +174,7 @@ PUBLIC int do_open(){
 		/*设置filp 、 file_desc_table 、inode_table*/
 		caller->filp[fd] = &file_desc_table[i];
 		file_desc_table[i].fd_inode = pin;								//指向inode_table中的元素
-		file_desc_table[i].fd_mode = flag;								
+		file_desc_table[i].fd_mode = flag;					 			
 		file_desc_table[i].fd_pos  = 0;
 
 		int imode = pin->i_mode & I_TYPE_MASK;
@@ -185,8 +185,10 @@ PUBLIC int do_open(){
 											//字符设备起始扇区为其设备号
 			msg.DEVICE = MINOR(pin->i_start_sect);
 			assert(MAJOR(pin->i_start_sect) == TASK_TTY);
+//			printl("minor device number is %d\n name is %s\n", msg.DEVICE, pathname);
+			msg.PROC_NR = fs_msg.source;
 
-			send_recv(BOTH, dd[MAJOR(pin->i_start_sect)].drv_pid, &msg);
+			send_recv(BOTH, dd[MAJOR(pin->i_start_sect)].drv_pid, &msg); 
 		}
 		else if(imode == I_DIRECTORY){
 			assert(pin->i_num == ROOT_INODE);
@@ -239,6 +241,7 @@ PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode){
 	return 0;
 }
 
+/*搜索文件是否存在，成功返回文件inode编号，失败返回0*/
 PUBLIC int search_file(char* path){
 	int i,j,k;
 	int flag = 0;

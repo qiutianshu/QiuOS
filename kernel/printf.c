@@ -8,13 +8,23 @@
 #include "proto.h"
 #include "global.h"
 
-PUBLIC int  printf(char* fmt, ...){
+PUBLIC int  printl(char* fmt, ...){
 	int i;
 	char buf[256];
 	char* argv = (char*)((char*)(&fmt) + 4);			//指向第一个参数
 	i = vsprintf(buf, fmt, argv);						//格式化字符串
 	buf[i] = 0;
 	printx(buf);
+	return i;
+}
+
+PUBLIC int  print(char* fmt, ...){
+	int i;
+	char buf[256];
+	char* argv = (char*)((char*)(&fmt) + 4);			//指向第一个参数
+	i = vsprintf(buf, fmt, argv);						//格式化字符串
+	int c = write(1, buf, i);
+	//assert(c == i);
 	return i;
 }
 

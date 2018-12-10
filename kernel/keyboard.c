@@ -73,16 +73,15 @@ PUBLIC void init_keyboard(){
 	caps_lock = 0;
 	scroll_lock = 0;
 	num_lock = 1;
-
 	set_leds();							//设置键盘指示灯
-
+	
 	put_irq_handler(KEYBOARD_IRQ,keyboard_handler);
 	enable_irq(KEYBOARD_IRQ);
 }
 
 PUBLIC void keyboard_handler(){
 	u8 scan_code = in_byte(0x60);			//读取8042缓冲区
-//	disp_int(scan_code);
+    keyboard_pressed = 1;	
 	if(kb_in.count <= 128){					//缓冲区满则丢弃
 		*(kb_in.p_head) = scan_code;
 		kb_in.p_head++;
@@ -90,6 +89,7 @@ PUBLIC void keyboard_handler(){
 			kb_in.p_head = kb_in.buf;		//循环队列
 		kb_in.count++;
 	}
+	keyboard_pressed = 1;	
 }
 
 PUBLIC void keyboard_read(TTY* p_tty){

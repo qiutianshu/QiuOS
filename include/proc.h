@@ -35,7 +35,7 @@ typedef struct s_proc{
 	int has_int_msg;
 	struct s_proc* q_sending;					//指向自身消息队列头
 	struct s_proc* next_sending;				
-	int nr_tty;
+//	int nr_tty;
 	struct file_desc* filp[NR_FILES];			//文件打开表
 }PROCESS;
 

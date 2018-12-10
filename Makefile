@@ -5,19 +5,21 @@ ENTRYPOINT	=	0x30400
 ASM		=	nasm
 LD		=	ld 
 CC		=	gcc
+BO 		=   bochs
 
 #Parament of command
 ASMBFLAGS	=	-I boot/include/
 ASMKFLAGS	=   -f elf -I include/
 CFLAGS		=	-c -I include/ -m32
-LDFLAGS		=  -m elf_i386 -Ttext 0x30400
+LDFLAGS		=   -m elf_i386 -Ttext 0x30400
 
 #This program
 QiuOSBOOT	=	boot/boot.bin	boot/loader.bin
 OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protect.o \
 				lib/klib.o kernel/main.o kernel/global.o kernel/clock.o kernel/syscall.o kernel/proc.o \
 				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
-				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o lib/usr/rdwt.o fs/read_write.o
+				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o lib/usr/rdwt.o fs/read_write.o lib/usr/unlink.o \
+				fs/unlink.o lib/string.o
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
@@ -29,7 +31,7 @@ everything:	$(QiuOSBOOT) $(OBJS) $(QiuOSKERNEL)
 clean:		
 			rm -f $(OBJS) $(QiuOSBOOT) $(QiuOSKERNEL)
 
-all:		clean everything bulidimg
+all:		clean everything bulidimg start
 
 
 
@@ -99,6 +101,10 @@ fs/open.o:fs/open.c include/const.h include/type.h include/protect.h include/glo
 
 fs/read_write.o:fs/read_write.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
+
+fs/unlink.o:fs/unlink.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+
+			$(CC) $(CFLAGS) -o $@ $<
  
 lib/usr/open.o:lib/usr/open.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
@@ -106,16 +112,26 @@ lib/usr/open.o:lib/usr/open.c include/const.h include/type.h include/protect.h i
 lib/usr/rdwt.o:lib/usr/rdwt.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
 
+lib/usr/unlink.o:lib/usr/unlink.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+	        $(CC) $(CFLAGS) -o $@ $<
+
 kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
 
 lib/klib.o:lib/klib.c include/proto.h include/const.h include/type.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+lib/string.o:lib/string.c
 			$(CC) $(CFLAGS) -o $@ $<
 
 lib/misc.o:lib/misc.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/kernel.bin:$(OBJS)
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o lib/usr/rdwt.o lib/usr/open.o \
-			fs/fs.o fs/open.o fs/read_write.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/printf.o kernel/keyboard.o \
-			kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o kernel/protect.o kernel/i8259.o \
-			lib/klib.o lib/kliba.o kernel/global.o
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o \
+		    fs/unlink.o fs/open.o fs/read_write.o fs/fs.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o \
+		    kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o \
+		    kernel/protect.o kernel/i8259.o lib/string.o lib/klib.o lib/kliba.o kernel/global.o
+
+
+start:		   
+			 $(BO)				

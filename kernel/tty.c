@@ -53,6 +53,42 @@ PRIVATE void tty_read(TTY* p_tty){
 		keyboard_read(p_tty);
 }
 
+PRIVATE void tty_write(TTY* tty){
+	while(tty->count){
+		char ch = *(tty->tail);
+		tty->tail++;
+		if(tty->tail >= tty->buf + TTY_BUF_SIZE)
+			tty->tail = tty->buf;
+		tty->count--;
+
+		if(tty->tty_left_cnt){
+			if(ch >= ' ' && ch <= '~'){		//可显示字符
+				disp_char(tty->p_console, ch);
+				void* p = tty->req_buf + tty->tty_trans_cnt;		
+				phy_cpy(p, va2la(TASK_TTY, &ch), 1);      //写入进程p缓冲区 
+				tty->tty_trans_cnt++;
+				tty->tty_left_cnt--;
+			}
+			else if(ch == '\b' && tty->tty_trans_cnt){
+				disp_char(tty->p_console, ch);
+				tty->tty_trans_cnt--;
+				tty->tty_left_cnt++;
+			}
+			if(ch == '\n' || tty->tty_left_cnt == 0){
+				disp_char(tty->p_console, ch);
+				MESSAGE msg;
+				msg.type = RESUME_PROC;
+				msg.PROC_NR = tty->tty_procnr;
+				msg.COUNT = tty->tty_trans_cnt;
+				send_recv(SEND, tty->tty_caller, &msg);		//通知文件系统解除对进程p的阻塞
+				tty->tty_left_cnt = 0;
+			}
+		}
+	}
+}
+/*
+			弃用
+
 PRIVATE void tty_write(TTY* p_tty){
 	if(p_tty->count){
 		char ch = *(p_tty->tail);
@@ -64,20 +100,79 @@ PRIVATE void tty_write(TTY* p_tty){
 
 		disp_char(p_tty->p_console,ch);
 	}
+}*/
+
+PRIVATE void tty_do_read(TTY* tty, MESSAGE* msg){
+	/*设置对应tty成员变量*/
+	tty->tty_caller = msg->source;
+	tty->tty_procnr = msg->PROC_NR;
+	tty->req_buf = (void*)va2la(tty->tty_procnr, msg->BUF);
+	tty->tty_left_cnt = msg->COUNT;
+	tty->tty_trans_cnt = 0;
+
+	msg->type = SUSPEND_PROC;				//挂起请求进程p
+	//msg->COUNT = tty->tty_left_cnt;
+	send_recv(SEND, tty->tty_caller, msg);
+}
+
+PRIVATE void tty_do_write(TTY* tty, MESSAGE* msg){
+	char* p = (char*)va2la(msg->PROC_NR, msg->BUF);
+	int i = msg->COUNT;
+
+	while(i){
+		disp_char(tty->p_console, *p);
+		p++;
+		i--;
+	}
+	msg->type = SYSCALL_RET;
+	send_recv(SEND, msg->source, &msg);
 }
 
 PUBLIC void task_tty(){
-	//assert(0);
 	TTY* p_tty;	
+	MESSAGE msg;
+
+
+	init_keyboard();
+												                        //初始化键盘
 	for(p_tty=tty_table; p_tty<tty_table+NR_CONSOLES; p_tty++)			//初始化tty_table
 		init_tty(p_tty);
 
 	switch_console(0);			//初始化为0号控制台
 
+	keyboard_pressed = 0;
 	while(1){
 		for(p_tty=tty_table; p_tty<tty_table+NR_CONSOLES; p_tty++){
-			tty_read(p_tty);
-			tty_write(p_tty);
+			do{
+				tty_read(p_tty);
+				tty_write(p_tty);
+			}while(p_tty->count);
+		}
+		send_recv(RECEIVE, ANY, &msg);
+		int src = msg.source;
+		assert(src != TASK_TTY);
+
+		TTY* ptty = &tty_table[msg.DEVICE];
+
+	//	printl("in tty msg.type %d PROC_NR %d\n ", msg.type, msg.PROC_NR);
+
+		switch(msg.type){
+			case DEV_OPEN:
+				reset_msg(&msg);
+				msg.type = SYSCALL_RET;
+				send_recv(SEND, src, &msg);
+				break;
+			case DEV_READ:
+				tty_do_read(ptty, &msg);
+				break;
+			case DEV_WRITE:
+				tty_do_write(ptty, &msg);
+				break;
+			case HARD_INT:
+				keyboard_pressed = 0;				//键盘记录清零	
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -205,7 +300,7 @@ PUBLIC int sys_printx(int unused1, int unused2, char* str, PROCESS* p_proc){
 	}
 
 	while((ch = *p++) != 0){
-		disp_char(tty_table[p_proc->nr_tty].p_console, ch);
+		disp_char(tty_table[0].p_console, ch);
 	}
 
 	return 0;

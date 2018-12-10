@@ -5,6 +5,8 @@
 #define PRIVATE static
 #define EXTERN	extern 
 
+#define printf  print
+
 /*主设备号*/
 #define NO_DEV			-1
 #define DEV_CHAR_TTY	0		//tty设备
@@ -13,8 +15,7 @@
 void assertion_failure(char* exp,char* file,char* base_file,int line);
 #define assert(exp)		if(exp);\
 else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
-
-#define printl			printf 		
+		
 
 #define min(a,b)		(a < b) ? a : b
 
@@ -46,7 +47,10 @@ enum msgtype{						//消息类型
 	FILE_CLOSE,
 	FILE_WRITE,
 	FILE_READ, 
-	SYSCALL_RET
+	FILE_DELETE,
+	SYSCALL_RET,
+	SUSPEND_PROC,
+	RESUME_PROC
 };
 
 #define DIOCTL_GET_GEO	1

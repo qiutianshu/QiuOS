@@ -31,6 +31,7 @@ EXTERN struct inode 	inode_table[NR_INODES];
 EXTERN	struct inode *		root_inode;
 EXTERN struct super_block super_block[NR_SUPER_BLOCK];
 EXTERN PROCESS* caller; 
+EXTERN keyboard_pressed;
 
 extern TASK task_table[];
 extern TASK user_proc_table[];

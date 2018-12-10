@@ -185,11 +185,10 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 
 		return 0;
 	}
-	if(src == ANY){												
+	if(src == ANY){									
 		if(p_recv->q_sending){									//消息队列不为空
 			p_from = p_recv->q_sending;
-			copy = 1;
-
+			copy = 1;	
 			assert(p_recv->p_flags == 0);
 			assert(p_recv->p_msg == 0);
 			assert(p_recv->p_recvfrom == NO_TASK);				//   ???????
@@ -202,7 +201,7 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 		}
 	}
 	else{														//接收特定进程的消息
-		p_from = &proc_table[src];
+		p_from = &proc_table[src];	
 
 		if((p_from->p_flags & SENDING) && (p_from->p_sendto == proc2pid(p_recv))){
 			copy = 1;
@@ -309,6 +308,8 @@ PUBLIC void info_task(int pid){
 	PROCESS* p = proc_table + pid;
 	if((p->p_flags == RECEIVING) && (p->p_recvfrom == INTERRUPT || p->p_recvfrom == ANY)){			//B进程等待接收中断消息
 		p->p_flags &= ~RECEIVING;
+		p->p_msg->source = INTERRUPT;
+		p->p_msg->type = HARD_INT;
 		p->p_msg = 0;
 		p->p_recvfrom = NO_TASK;
 		p->p_sendto = NO_TASK;

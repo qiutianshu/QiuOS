@@ -75,18 +75,9 @@ PUBLIC int kernel_main(){
 		p_proc++;
 		p_task++;
 		selector_ldt +=1 << 3;
-		p_proc->nr_tty = 0;							//初始化指向0号
 
 	}
 	init_clock();									//初始化时钟
-	init_keyboard();								//初始化键盘
-
-	/*指定进程对应的控制台*/
-	proc_table[1].nr_tty = 0;
-	proc_table[2].nr_tty = 0;
-	proc_table[3].nr_tty = 0;
-
-	
 
 	ticks = 0;
 	k_reenter = 0;
@@ -98,28 +89,51 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
-	char buf[9];
-	int fd = open("/qts", O_CREATE | O_RW);			//新建QTS文件
-	printl("fd: %d\n ",fd);
+	while(1){
+	}
+/*	char* filename[] = {"/qts","/foo2","foo3","foo4"};
+	char* rfilename[] = {"/qts","/foo2","/dev_tty1","/"};
+	int fd;
+	for(int i = 0; i < 4; i++){
+		fd = open(filename[i], O_CREATE | O_RW);			//新建QTS文件
+	//	write(fd, "qwertyui", 8);
+		close(fd);
+	}
+	spin("create file");
+	for(int j = 0; j < 4; j++){
+		if(unlink(rfilename[j]) == 0)
+			printl("file removed : %s\n ", rfilename[j]);
+		else
+			printl("file removed failed : %s\n ",rfilename[j]);
+	}
 
-	int n = write(fd, "qwertyui", 8);
-	assert(n == 8);
-	
-	close(fd);
-
-	fd = open("/qts", O_RW);
-	n = read(fd, buf, 8);
-	assert(n == 8);
-	buf[8] = 0;
-	printl("content: %s\n ", buf);
-	close(fd);
-	spin("TESTA");
+	spin("TestA");*/
 }
 
 void TestB(){
+	char tty_name[] = "/dev_tty2";
+
+	int fd_stdin = open(tty_name, O_RW);
+	int fd_stdout = open(tty_name, O_RW);
+	char rdbuf[128];
+
+	printf("\n");
+
 	while(1){
-		milli_delay(200);
+		printf("%s", "$ ");
+		int r = read(fd_stdin, rdbuf, 77);
+		rdbuf[r] = 0;
+ 
+		if(strcmp(rdbuf, "hallo") == 0){
+			printf("%s\n", "hallo qts");
+		}
+		else{
+			if(rdbuf[0]){
+				printf("{%s}\n", rdbuf);
+			}
+		}
 	}
+	assert(0);
 }
 
 void TestC(){

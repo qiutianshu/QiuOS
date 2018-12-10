@@ -13,6 +13,9 @@ PUBLIC void clock_handler(){
 	ticks++;
   	p_proc_ready->ticks--;
 
+  	if(keyboard_pressed)
+  		info_task(TASK_TTY);		//有按键按下则唤醒tty任务
+
     if(k_reenter != 0)
     	return;
 
