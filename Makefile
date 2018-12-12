@@ -19,7 +19,7 @@ OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protec
 				lib/klib.o kernel/main.o kernel/global.o kernel/clock.o kernel/syscall.o kernel/proc.o \
 				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
 				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o lib/usr/rdwt.o fs/read_write.o lib/usr/unlink.o \
-				fs/unlink.o lib/string.o
+				fs/unlink.o lib/string.o mm/mm.o mm/forkexit.o lib/usr/fork.o
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
@@ -115,6 +115,9 @@ lib/usr/rdwt.o:lib/usr/rdwt.c include/const.h include/type.h include/protect.h i
 lib/usr/unlink.o:lib/usr/unlink.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 	        $(CC) $(CFLAGS) -o $@ $<
 
+lib/usr/fork.o:lib/usr/fork.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
 kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
 
 lib/klib.o:lib/klib.c include/proto.h include/const.h include/type.h
@@ -126,9 +129,15 @@ lib/string.o:lib/string.c
 lib/misc.o:lib/misc.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h
 			$(CC) $(CFLAGS) -o $@ $<
 
+mm/mm.o:mm/mm.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+mm/forkexit.o: mm/forkexit.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
 kernel/kernel.bin:$(OBJS)
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o \
-		    fs/unlink.o fs/open.o fs/read_write.o fs/fs.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o \
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/fork.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o \
+		    mm/mm.o mm/forkexit.o fs/unlink.o fs/open.o fs/read_write.o fs/fs.o lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o \
 		    kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o kernel/start.o \
 		    kernel/protect.o kernel/i8259.o lib/string.o lib/klib.o lib/kliba.o kernel/global.o
 

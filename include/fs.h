@@ -46,6 +46,7 @@ struct dir_entry{
 typedef struct file_desc{				//文件描述符
 	int 				fd_mode;
 	int 				fd_pos;		
+	int 				fd_cnt;			
 	struct inode* 		fd_inode;		//指向inode_table中元素
 };
 

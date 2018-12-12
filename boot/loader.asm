@@ -2,8 +2,6 @@
 	jmp LABEL_START
 
 %include "pm.inc"
-
-
 	BaseOfStack			equ		0x100
 	BaseOfLoader		equ		0x9000
 	OffsetOfLoader		equ		0x100
@@ -316,9 +314,13 @@ LABEL_PM:
 	call DispStr 				;0x904df
 	add esp,4
 	call DispMemSIze
+
 	call SetupPaging			;设置分页 0x903c7
 ;映射内核代码
 	call InitKernel
+
+	mov eax,[dwMemSize]
+	mov [Memsize],eax
 
 ;向内核转移控制权
 	jmp SelectorFlatC:0x30400
@@ -614,6 +616,8 @@ ARDStruct 			equ		0x90000+ _ARDStruct
 	dwType 			equ		0x90000+ _dwType 
 MemChkBuf 			equ		0x90000+ _MemChkBuf
 PageTableNumber     equ     0x90000+ _PageTableNumber 
+Memsize 			equ		0x900
+
 
 StackSpace:	times	1024	db	1
 TopOfStack	equ	0x90400+ StackSpace				;栈顶

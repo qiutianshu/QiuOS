@@ -22,10 +22,12 @@ else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
 #define MAG_CH_PANIC	0x02
 #define MAG_CH_ASSERT	0x03
 
-/*进程的状态*/
+/*进程p_flags标志位*/
 #define RUNNING			0			//正在运行或者就绪
 #define SENDING 		0x2 		//消息未发送出去正在发送
 #define RECEIVING		0x4 		//未接收到消息正在接收
+#define FREE_SLOT		0x20 		//进程表未使用
+
 #define ANY				(NR_TASKS + NR_PROCS + 10)
 #define NO_TASK			(NR_TASKS + NR_PROCS + 20)
 #define INTERRUPT		-10
@@ -50,7 +52,8 @@ enum msgtype{						//消息类型
 	FILE_DELETE,
 	SYSCALL_RET,
 	SUSPEND_PROC,
-	RESUME_PROC
+	RESUME_PROC,
+	FORK
 };
 
 #define DIOCTL_GET_GEO	1
@@ -135,34 +138,16 @@ enum msgtype{						//消息类型
 #define INT_VECTOR_SYS_CALL			0x90
 
 
-//进程相关常量
-#define NR_TASKS					4		//任务数量
-#define NR_PROCS					3		//用户进程数
-
-#define UNUSED						-10
-#define TASK_TTY					0		//TTY任务
-#define TASK_SYS					1		//系统进程号
-#define TASK_HD						2		//硬盘驱动进程号
-#define TASK_FS						3		//文件系统
-
-#define STACK_SIZE_TESTA            0x8000
-#define STACK_SIZE_TESTB            0x8000
-#define STACK_SIZE_TESTC            0x8000
-#define STACK_SIZE_TTY				0x8000
-#define STACK_SIZE_SYS_TASK			0x8000
-#define STACK_SIZE_HD				0x8000
-#define STACK_SIZE_FS				0x8000
-#define STACK_SIZE_TOTAL			(STACK_SIZE_FS+ STACK_SIZE_HD+ STACK_SIZE_TESTA+ STACK_SIZE_TESTB+ STACK_SIZE_TESTC+ STACK_SIZE_TTY+ STACK_SIZE_SYS_TASK)
-
 //描述符相关常量
-#define DA_32	0x4000				//32位段
+#define DA_32			0x4000		//32位段
+#define	DA_LIMIT_4K		0x8000 	    //段粒度为４Ｋ
 #define DA_DPL0	0x0 				//DPL = 0
 #define DA_DPL1	0x1 				//DPL = 1
 #define DA_DPL2	0x2 				//DPL = 2
 #define DA_DPL3	0x3 				//DPL = 3
 //存储段
 #define DA_DR 	0x90				//存在的只读数据段类型值
-#define DA_DAW 	0x92				//存在的可读写数据段属性值
+#define DA_DRW 	0x92				//存在的可读写数据段属性值
 #define DA_DRWA	0x93				//存在的已访问可读写数据段类型值
 #define DA_C    0x98				//存在的只执行代码段属性值
 #define DA_CR   0x9a				//存在的可执行可读代码段属性值
@@ -198,5 +183,7 @@ enum msgtype{						//消息类型
 #define INDEX_FLAT_C	3
 #define INDEX_TSS		4
 #define INDEX_LDT_FIRST	5
+
+#define SHF_ALLOC		2
 
 #endif

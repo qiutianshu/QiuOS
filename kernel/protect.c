@@ -130,7 +130,7 @@ PRIVATE void init_idt_desc(u8 vector,u8 desc_type,int_handler handler,u8 privile
 /*
 	初始化全局（局部）描述符
 */
-PRIVATE void init_descriptor(Descriptor* desc, u32 base, u32 limit,u16 attribute){
+PUBLIC void init_descriptor(Descriptor* desc, u32 base, u32 limit,u16 attribute){
 	desc->limit_low = limit & 0xffff;
 	desc->base_low = base & 0xffff;
 	desc->base_mid = (base>>16) & 0xff;
@@ -193,7 +193,9 @@ PUBLIC void init_prot(){
 	int i;
 	PROCESS* p_proc = proc_table;
 	u16 selector_ldt = SELECTOR_LDT_FIRST >> 3;						//SELECTOR_LDT_FIRST / 8
-	for(i=0; i<NR_TASKS + NR_PROCS; i++){
+	for(i=0; i<NR_TASKS + NR_PROCS; i++){ 
+		memset(&proc_table[i], 0, sizeof(PROCESS));
+		proc_table[i].ldt_sel = SELECTOR_LDT_FIRST + (i << 3);		//预先为每个进程填充选择子
 		init_descriptor(&gdt[selector_ldt],
 						vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts),
 						LDT_SIZE * sizeof(Descriptor) - 1,

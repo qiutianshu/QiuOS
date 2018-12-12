@@ -56,6 +56,8 @@ typedef struct {
 #define NAME_LEN	u.m3.m3i2
 #define FD			u.m3.m3i3
 
+#define PID 		u.m3.m3i2
+
 
 typedef struct dev_drv_map{
 	int drv_pid;					//主设备号映射到驱动

@@ -20,7 +20,7 @@ PUBLIC int kernel_main(){
 	u8 		privilege;
 	u8 		rpl;
 	int 	eflags;
-	int prior;
+	int prior; 
 
 	for(i=0; i<NR_TASKS + NR_PROCS; i++){
 		if(i < NR_TASKS){							//任务
@@ -30,22 +30,43 @@ PUBLIC int kernel_main(){
 			eflags = 0x1202;						//开启所有IO权限，打开中断
 			prior = 15;
 		}
-		else{
+		else if(i >= NR_TASKS && i < (NR_TASKS + NR_NATIVE_PROCS)){
 			p_task = user_proc_table + (i - NR_TASKS);
-			privilege = 3;//PRIVILEGE_USER;
+			privilege = 3;							//PRIVILEGE_USER;
 			rpl = SA_RPL3;
 			eflags = 0x202; 						//剥夺IO权限
 			prior = 5;
 		}
+		else{
+			p_proc->p_flags = FREE_SLOT;					//进程表未使用
+			continue;
+		}
 		/*初始化进程表工作*/
 		strcpy(p_proc->p_name,p_task->name);		
-		p_proc->pid = i;							
-		p_proc->ldt_sel = selector_ldt;
-
-		memcpy(&p_proc->ldts[0],&gdt[SELECTOR_KERNEL_CS >> 3],sizeof(Descriptor));		//复制内核全局描述符
-		p_proc->ldts[0].attr1 = DA_C | privilege << 5;									//修改特权级为1
-		memcpy(&p_proc->ldts[1],&gdt[SELECTOR_KERNEL_DS >> 3],sizeof(Descriptor));
-		p_proc->ldts[1].attr1 = DA_DAW | privilege << 5;
+//		p_proc->pid = i;	
+		p_proc->p_parent = NO_TASK;
+//		p_proc->ldt_sel = selector_ldt;
+		if(strcmp(p_task->name , "Init") != 0){		//普通进程
+			memcpy(&p_proc->ldts[INDEX_LDT_C],&gdt[SELECTOR_KERNEL_CS >> 3],sizeof(Descriptor));		//复制内核全局描述符
+			p_proc->ldts[INDEX_LDT_C].attr1 = DA_C | privilege << 5;									//修改特权级为1
+			memcpy(&p_proc->ldts[INDEX_LDT_D],&gdt[SELECTOR_KERNEL_DS >> 3],sizeof(Descriptor));
+			p_proc->ldts[INDEX_LDT_D].attr1 = DA_DRW | privilege << 5;
+		}
+		else{
+			u32 k_base;
+			u32 k_limit;
+			int ret = get_kernel_map(&k_base, &k_limit);
+			printl("k_base is %d, k_limit is %d\n", k_base,k_limit);
+			assert(ret == 0);
+			init_descriptor(&p_proc->ldts[INDEX_LDT_C], 
+							0, 
+							(k_base + k_limit) >> 12,          //除以4k
+							DA_32 | DA_LIMIT_4K | DA_C | privilege << 5);
+			init_descriptor(&p_proc->ldts[INDEX_LDT_D],
+							0,
+							(k_base + k_limit) >> 12,
+							DA_32 | DA_LIMIT_4K | DA_DRW | privilege << 5);
+		}
 
 		p_proc->regs.cs = (0 & 0xfffc & 0xfffb) | SA_L | rpl;
 		p_proc->regs.ds = (8 & 0xfffc & 0xfffb) | SA_L | rpl;
@@ -73,9 +94,7 @@ PUBLIC int kernel_main(){
 			p_proc->filp[k] = 0;					//初始化文件打开表
 		
 		p_proc++;
-		p_task++;
-		selector_ldt +=1 << 3;
-
+//		selector_ldt +=1 << 3;
 	}
 	init_clock();									//初始化时钟
 
@@ -139,5 +158,24 @@ void TestB(){
 void TestC(){
 	while(1){
 		milli_delay(200);
+	}
+}
+
+void Init(){
+	int fd_stdin = open("/dev_tty1", O_RW);
+	assert(fd_stdin == 0);
+	int fd_stdout = open("/dev_tty1", O_RW);
+	assert(fd_stdout == 1);
+
+	printf("Init() is running     \n");
+
+	int pid = fork();
+	if(pid){
+		printf("in parent process, child pid is: %d\n", pid);
+		spin("parent");
+	}
+	else{
+		printf("in child process, child pid is: %d\n", pid);
+		spin("child");
 	}
 }

@@ -6,14 +6,16 @@ PUBLIC u8	in_byte(u16 port);
 PUBLIC void disp_str(char* info);
 PUBLIC void disp_int(int input);
 PUBLIC void disp_color_str(char* info,int color);
+PUBLIC void init_descriptor(Descriptor* desc, u32 base, u32 limit,u16 attribute);	//初始化描述符表
 PUBLIC char* atoi(char* str,int num);
+PUBLIC int get_kernel_map(u32* base, u32* size);
 PUBLIC void memcpy(void *Dest,void *Src,int size);
 PUBLIC void init_8259A();
 PUBLIC void delay();
 PUBLIC void TestA();
 PUBLIC void TestB();
 PUBLIC void TestC();
-PUBLIC void task_tty();
+PUBLIC void Init();
 PUBLIC void memset(void* dest,char chr,int size);
 PUBLIC void strcpy(void* dest, void* src);
 PUBLIC int strcmp(char* str1, char* str2);
@@ -50,11 +52,15 @@ PUBLIC void info_task(int pid);									//唤醒进程
 PUBLIC void task_sys();											//系统进程
 PUBLIC void task_hd();											//硬盘驱动
 PUBLIC void task_fs();											//文件系统
+PUBLIC void task_mm();											//内存管理
+PUBLIC void task_tty();											//tty任务
 
 PUBLIC int do_open();											//打开文件
 PUBLIC int do_close();											//关闭文件
 PUBLIC int do_rw();												//文件读写
 PUBLIC int do_unlink();											//文件删除
+
+PUBLIC int do_fork();											//创建子进程
 
 PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode);
 PUBLIC void rw_sector(int type, int dev, int pos_in_sector, int bytes, int proc, void* buf);
@@ -71,6 +77,8 @@ PUBLIC int close(int fd);
 PUBLIC int write(int fd, void* buf, int count);
 PUBLIC int read(int fd, void* buf, int count);
 PUBLIC int unlink(char* filepath);
+
+PUBLIC int fork();												//创建子进程
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();

@@ -14,10 +14,12 @@ PUBLIC TASK task_table[NR_TASKS] = {
 	{task_tty,STACK_SIZE_TTY,"tty"},
 	{task_sys,STACK_SIZE_SYS_TASK,"task_sys"},
 	{task_hd,STACK_SIZE_HD,"task_hd"},
-	{task_fs,STACK_SIZE_FS,"task_fs"}
+	{task_fs,STACK_SIZE_FS,"task_fs"},
+	{task_mm,STACK_SIZE_MM,"task_mm"}
 };
 
 PUBLIC TASK user_proc_table[NR_PROCS] = {
+	{Init,STACK_SIZE_INIT,"Init"},
 	{TestA,STACK_SIZE_TESTA,"TestA"},
     {TestB,STACK_SIZE_TESTB,"TestB"},
     {TestC,STACK_SIZE_TESTC,"TestC"}

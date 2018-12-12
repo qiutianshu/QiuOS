@@ -160,6 +160,18 @@ PRIVATE void mkfs(){
 	rw_sector(DEV_WRITE, ROOT_DEV, sb.n_1st_sect, 512, TASK_FS, fsbuf);
 }
 
+PRIVATE int fs_fork(){
+	int i;
+	PROCESS* p = &proc_table[fs_msg.PID];
+	for(i = 0; i < NR_FILES; i++){
+		if(p->filp[i]){
+			p->filp[i]->fd_cnt++;
+			p->filp[i]->fd_inode->i_cnt++;
+		}
+	}
+	return 0;
+}
+
 PRIVATE	void init_fs(){
 	int i;
 	for(i = 0; i < NR_FILE_DESC; i++)									//初始化文件描述符表、inode_table，
@@ -210,6 +222,9 @@ PUBLIC void task_fs(){
 				break;
 			case RESUME_PROC:
 				src = fs_msg.PROC_NR;
+				break;
+			case FORK:
+				fs_msg.RETVAL = fs_fork();
 				break;
 			default:
 				break;
