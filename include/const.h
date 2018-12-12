@@ -26,6 +26,8 @@ else assertion_failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
 #define RUNNING			0			//正在运行或者就绪
 #define SENDING 		0x2 		//消息未发送出去正在发送
 #define RECEIVING		0x4 		//未接收到消息正在接收
+#define WAITING 		0x8 		//等待子进程退出
+#define HANGING 		0x10		//子进程等待父进程wait掉
 #define FREE_SLOT		0x20 		//进程表未使用
 
 #define ANY				(NR_TASKS + NR_PROCS + 10)
@@ -53,7 +55,9 @@ enum msgtype{						//消息类型
 	SYSCALL_RET,
 	SUSPEND_PROC,
 	RESUME_PROC,
-	FORK
+	FORK,
+	EXIT,
+	WAIT
 };
 
 #define DIOCTL_GET_GEO	1

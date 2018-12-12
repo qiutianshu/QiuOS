@@ -61,6 +61,8 @@ PUBLIC int do_rw();												//文件读写
 PUBLIC int do_unlink();											//文件删除
 
 PUBLIC int do_fork();											//创建子进程
+PUBLIC void do_exit(int status);							
+PUBLIC void do_exit(int status);
 
 PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode);
 PUBLIC void rw_sector(int type, int dev, int pos_in_sector, int bytes, int proc, void* buf);
@@ -79,6 +81,8 @@ PUBLIC int read(int fd, void* buf, int count);
 PUBLIC int unlink(char* filepath);
 
 PUBLIC int fork();												//创建子进程
+PUBLIC void exit(int status);									//退出进程
+PUBLIC int wait(int* status);									//等待子进程返回状态码
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();

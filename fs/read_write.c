@@ -22,7 +22,8 @@ PUBLIC int do_rw(){
 
 	struct inode* p = caller->filp[fd]->fd_inode;
 
-	assert(p >= &inode_table[0] && p <= &inode_table[NR_INODES]);
+	assert(p >= &inode_table[0]);
+	assert(p <= &inode_table[NR_INODES]);
 
 	/*检查文件描述符，防止出现未打开的读写*/
 	assert((caller->filp[fd] >= file_desc_table) && \

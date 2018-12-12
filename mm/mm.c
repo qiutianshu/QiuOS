@@ -13,14 +13,22 @@
 PUBLIC void task_mm(){
 	total_memory_size = *(int*)MEMSIZE;
 	printl("Total memory size: %dMb \n", (total_memory_size)/(1024 * 1024));
+	int reply = 1;
 	while(1){
 		send_recv(RECEIVE, ANY, &mm_msg);
 		int src = mm_msg.source;
-		int reply = 1;
 
 		switch(mm_msg.type){
 			case FORK:
 				mm_msg.RETVAL = do_fork();
+				break;
+			case EXIT:
+				do_exit(mm_msg.STATUS);
+				reply = 0;
+				break;
+			case WAIT:
+				do_wait();				//返回退出进程的进程号
+				reply = 0;
 				break;
 			default:
 				panic("unknown message!");
@@ -30,6 +38,7 @@ PUBLIC void task_mm(){
 			mm_msg.type = SYSCALL_RET;
 			send_recv(SEND, src, &mm_msg);
 		}
+		reply = 1;
 	}
 }
 

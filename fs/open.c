@@ -174,7 +174,8 @@ PUBLIC int do_open(){
 		/*设置filp 、 file_desc_table 、inode_table*/
 		caller->filp[fd] = &file_desc_table[i];
 		file_desc_table[i].fd_inode = pin;								//指向inode_table中的元素
-		file_desc_table[i].fd_mode = flag;					 			
+		file_desc_table[i].fd_mode = flag;	
+		file_desc_table[i].fd_cnt = 1;				 			
 		file_desc_table[i].fd_pos  = 0;
 
 		int imode = pin->i_mode & I_TYPE_MASK;

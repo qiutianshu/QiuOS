@@ -131,13 +131,11 @@ void TestA(){
 
 void TestB(){
 	char tty_name[] = "/dev_tty2";
-
 	int fd_stdin = open(tty_name, O_RW);
 	int fd_stdout = open(tty_name, O_RW);
 	char rdbuf[128];
 
 	printf("\n");
-
 	while(1){
 		printf("%s", "$ ");
 		int r = read(fd_stdin, rdbuf, 77);
@@ -168,14 +166,18 @@ void Init(){
 	assert(fd_stdout == 1);
 
 	printf("Init() is running     \n");
-
+	
 	int pid = fork();
 	if(pid){
-		printf("in parent process, child pid is: %d\n", pid);
-		spin("parent");
+		printf("in parent process now, child pid is: %d\n", pid);
+		int s;
+		int c = wait(&s);
+		printf("child PID %d exit with code %d\n", c, s);
+		spin(" ");
 	}
 	else{
-		printf("in child process, child pid is: %d\n", pid);
+		printf("in child process now, child pid is: %d\n ", pid);
+		exit(123);
 		spin("child");
 	}
 }

@@ -172,6 +172,21 @@ PRIVATE int fs_fork(){
 	return 0;
 }
 
+PRIVATE int fs_exit(){
+	PROCESS * proc = &proc_table[fs_msg.PID];
+	int i ;
+	for(i = 0; i < NR_FILES; i++){
+		if(proc->filp[i]){
+			proc->filp[i]->fd_inode->i_cnt--;
+			proc->filp[i]->fd_cnt--;
+			if(proc->filp[i]->fd_cnt == 0)
+				proc->filp[i]->fd_inode = 0;
+			proc->filp[i] = 0;
+		}
+	}
+	return 0;
+}
+
 PRIVATE	void init_fs(){
 	int i;
 	for(i = 0; i < NR_FILE_DESC; i++)									//初始化文件描述符表、inode_table，
@@ -225,6 +240,9 @@ PUBLIC void task_fs(){
 				break;
 			case FORK:
 				fs_msg.RETVAL = fs_fork();
+				break;
+			case EXIT:
+				fs_msg.RETVAL = fs_exit();
 				break;
 			default:
 				break;

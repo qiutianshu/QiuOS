@@ -9,6 +9,7 @@
 #define TASK_HD						2		//硬盘驱动进程号
 #define TASK_FS						3		//文件系统
 #define TASK_MM 					4		//内存管理
+#define PROC_INIT					5		//Init进程号
 
 #define STACK_SIZE_DEFAULT			0x4000					//进程默认栈１６ｋｂ
 #define STACK_SIZE_INIT             STACK_SIZE_DEFAULT		//init进程
