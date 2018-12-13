@@ -20,7 +20,7 @@ OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protec
 				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
 				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o lib/usr/rdwt.o fs/read_write.o lib/usr/unlink.o \
 				fs/unlink.o lib/string.o mm/mm.o mm/forkexit.o lib/usr/fork.o lib/usr/exit.o lib/usr/wait.o \
-				mm/exit.o
+				mm/exit.o lib/usr/getpid.o lib/cstring.o
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
@@ -50,6 +50,9 @@ boot/loader.bin:boot/loader.asm boot/include/fat12hdr.inc boot/include/pm.inc
 			$(ASM) $(ASMBFLAGS) -o $@ $<
 
 lib/kliba.o:lib/kliba.asm
+			$(ASM) $(ASMKFLAGS) -o $@ $<
+
+lib/cstring.o:lib/cstring.asm
 			$(ASM) $(ASMKFLAGS) -o $@ $<
 
 kernel/kernel.o:kernel/kernel.asm 
@@ -125,6 +128,9 @@ lib/usr/exit.o:lib/usr/exit.c include/const.h include/type.h include/protect.h i
 lib/usr/wait.o:lib/usr/wait.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 	        $(CC) $(CFLAGS) -o $@ $<
 
+lib/usr/getpid.o:lib/usr/getpid.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
 kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
 
 lib/klib.o:lib/klib.c include/proto.h include/const.h include/type.h
@@ -146,10 +152,10 @@ mm/exit.o:mm/exit.c include/const.h include/type.h include/protect.h include/glo
 	        $(CC) $(CFLAGS) -o $@ $<
 
 kernel/kernel.bin:$(OBJS)
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/exit.o lib/usr/wait.o \
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/getpid.o lib/usr/exit.o lib/usr/wait.o \
 			lib/usr/fork.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o mm/exit.o mm/mm.o mm/forkexit.o fs/unlink.o fs/open.o fs/read_write.o fs/fs.o \
 			lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o \
-			kernel/start.o kernel/protect.o kernel/i8259.o lib/string.o lib/klib.o lib/kliba.o kernel/global.o
+			kernel/start.o kernel/protect.o kernel/i8259.o lib/string.o lib/cstring.o lib/klib.o lib/kliba.o kernel/global.o
 
 
 start:		   

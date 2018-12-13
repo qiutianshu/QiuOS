@@ -266,23 +266,6 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 	return 0;
 }
 
-
-PUBLIC int send_recv(int function, int src_dest, MESSAGE* msg){
-	if(function == RECEIVE)
-		reset_msg(msg);				//消息清零准备接收
-
-	if(function == RECEIVE || function == SEND)				
-		return (sendrec(function, src_dest, msg));
-
-	if(function == BOTH)
-		if(!sendrec(SEND, src_dest, msg)){
-	//		reset_msg(msg);
-			sendrec(RECEIVE, src_dest, msg);
-		}
-
-	return 0;
-}
-
 PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p){
 	assert(k_reenter == 0);						//确保在核心态
 	assert((src_dest >= 0 && src_dest < NR_TASKS + NR_TASKS) || 

@@ -18,6 +18,11 @@ PUBLIC void task_sys(){
 				msg.RETVAL = ticks;
 				send_recv(SEND, src, &msg);
 				break;
+			case GET_PID:
+				msg.PID = src;
+				msg.type = SYSCALL_RET;
+				send_recv(SEND, src, &msg);
+				break;
 			default:
 				panic("unknown message type!!");
 				break;

@@ -57,7 +57,8 @@ enum msgtype{						//消息类型
 	RESUME_PROC,
 	FORK,
 	EXIT,
-	WAIT
+	WAIT,
+	GET_PID
 };
 
 #define DIOCTL_GET_GEO	1

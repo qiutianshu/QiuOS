@@ -87,6 +87,7 @@ PUBLIC int wait(int* status);									//等待子进程返回状态码
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
 PUBLIC int get_ticks();											//用户调用接口
+PUBLIC int getpid();
 PUBLIC int sys_get_ticks();										//中断处理例程
 
 //PUBLIC void write(char* buf, int len);

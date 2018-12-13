@@ -1,0 +1,1 @@
+kernel/syscall.o kernel/printf.o lib/klib.o lib/misc.o lib/string.o lib/usr/fork.o lib/usr/exit.o lib/usr/getpid.o lib/usr/open.o lib/usr/rdwt.o lib/usr/unlink.o lib/usr/wait.o lib/cstring.o

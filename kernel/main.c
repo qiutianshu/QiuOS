@@ -176,7 +176,7 @@ void Init(){
 		spin(" ");
 	}
 	else{
-		printf("in child process now, child pid is: %d\n ", pid);
+		printf("in child process now, child pid is: %d\n ", getpid());
 		exit(123);
 		spin("child");
 	}
