@@ -23,7 +23,6 @@ PUBLIC int send_recv(int function, int src_dest, MESSAGE* msg){
 
 	if(function == BOTH)
 		if(!sendrec(SEND, src_dest, msg)){
-	//		reset_msg(msg);
 			sendrec(RECEIVE, src_dest, msg);
 		}
 

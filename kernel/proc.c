@@ -268,9 +268,7 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 
 PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p){
 	assert(k_reenter == 0);						//确保在核心态
-	assert((src_dest >= 0 && src_dest < NR_TASKS + NR_TASKS) || 
-		src_dest == ANY || src_dest == INTERRUPT);
-
+	assert((src_dest >= 0 && src_dest < NR_TASKS + NR_PROCS) || src_dest == ANY || src_dest == INTERRUPT);
 	int caller = proc2pid(p);
 	MESSAGE* mla = (MESSAGE*)va2la(caller, m);
 	mla->source = caller;

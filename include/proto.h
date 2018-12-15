@@ -48,6 +48,8 @@ PUBLIC void panic(char* fmt, ...);
 PUBLIC void port_read(int port, void* buf, int size);			//从端口读消息
 PUBLIC void port_write(int port, void* buf, int size);			//端口写
 PUBLIC void info_task(int pid);									//唤醒进程
+PUBLIC void untar(const char* filename);
+PUBLIC void ti_shell(const char* tty);								//终端
 
 PUBLIC void task_sys();											//系统进程
 PUBLIC void task_hd();											//硬盘驱动
@@ -59,10 +61,12 @@ PUBLIC int do_open();											//打开文件
 PUBLIC int do_close();											//关闭文件
 PUBLIC int do_rw();												//文件读写
 PUBLIC int do_unlink();											//文件删除
+PUBLIC int fs_stat();
 
 PUBLIC int do_fork();											//创建子进程
 PUBLIC void do_exit(int status);							
 PUBLIC void do_exit(int status);
+PUBLIC int do_exec();
 
 PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode);
 PUBLIC void rw_sector(int type, int dev, int pos_in_sector, int bytes, int proc, void* buf);
@@ -79,19 +83,19 @@ PUBLIC int close(int fd);
 PUBLIC int write(int fd, void* buf, int count);
 PUBLIC int read(int fd, void* buf, int count);
 PUBLIC int unlink(char* filepath);
+PUBLIC int stat(char* pathname, struct status* s);
 
 PUBLIC int fork();												//创建子进程
 PUBLIC void exit(int status);									//退出进程
 PUBLIC int wait(int* status);									//等待子进程返回状态码
+PUBLIC int execl(const char* path ,const char* arg1,...);
+PUBLIC int execv(const char* path, char* argv[]);
 
 /*   以下是系统调用相关		*/
 PUBLIC void sys_call();
 PUBLIC int get_ticks();											//用户调用接口
 PUBLIC int getpid();
 PUBLIC int sys_get_ticks();										//中断处理例程
-
-//PUBLIC void write(char* buf, int len);
-//PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc);
 
 PUBLIC int sendrec(int function, int src_dest, MESSAGE* m);
 PUBLIC int sys_sendrec(int function, int src_dest, MESSAGE* m, PROCESS* p);

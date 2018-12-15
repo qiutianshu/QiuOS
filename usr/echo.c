@@ -4,7 +4,7 @@ int main(int argc, char const *argv[])
 {
 	int i;
 	for(i = 1; i < argc; i++)
-		printf("%s%s", (i == 1) ? "" : " ", argv[i]);
-	printf("\n");
-	return 0;
+		printl("%s ", argv[i]);
+	printl("\n");
+	return 1;
 }

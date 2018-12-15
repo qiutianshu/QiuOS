@@ -51,6 +51,7 @@ enum msgtype{						//消息类型
 	FILE_CLOSE,
 	FILE_WRITE,
 	FILE_READ, 
+	FILE_STAT,
 	FILE_DELETE,
 	SYSCALL_RET,
 	SUSPEND_PROC,
@@ -58,7 +59,8 @@ enum msgtype{						//消息类型
 	FORK,
 	EXIT,
 	WAIT,
-	GET_PID
+	GET_PID,
+	EXEC
 };
 
 #define DIOCTL_GET_GEO	1

@@ -42,5 +42,9 @@ extern system_call sys_call_table[];
 extern TTY tty_table[];
 extern CONSOLE console_table[];
 extern struct dev_drv_map dd[];
+
 extern u8* fsbuf;
 extern const int FSBUF_SIZE;
+
+extern u8* mmbuf;
+extern const int MMBUF_SIZE;

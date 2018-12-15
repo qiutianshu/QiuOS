@@ -58,7 +58,7 @@ PUBLIC int do_rw(){
 						//结束扇区
 
 		if(fs_msg.type == FILE_WRITE)
-			end_sect = p->i_start_sect + (min((f_pos + len) / 512, p->i_nr_sects / 512));
+			end_sect = p->i_start_sect + (min((f_pos + len) / 512, p->i_nr_sects));
 
 		/*以chunk为读写单位，chunk上限为FSBUF_SIZE*/
 		int chunk = min(end_sect - start_sect + 1, FSBUF_SIZE / 512);
@@ -81,7 +81,6 @@ PUBLIC int do_rw(){
 			left 						-+ bytes;
 			caller->filp[fd]->fd_pos    += bytes;
 		}
-
 		if(caller->filp[fd]->fd_pos >= p->i_size){					//比较修改后的文件长度，如果增加则修改inode
 			p->i_size = caller->filp[fd]->fd_pos;
 			sync_inode(p);

@@ -50,6 +50,11 @@ typedef struct file_desc{				//文件描述符
 	struct inode* 		fd_inode;		//指向inode_table中元素
 };
 
+struct status{
+	int size;
+	int _unused;
+};
+
 #define DIR_ENTRY_SIZE		sizeof(struct dir_entry)
 
 /* INODE::i_mode (octal, lower 12 bits reserved) */
@@ -71,3 +76,6 @@ typedef struct file_desc{				//文件描述符
 
 #define O_CREATE		1
 #define O_RW 			2
+
+#define INSTALL_FIRST_SECTOR		0x8000						//cmd.tar首扇区号
+#define INSTALL_NR_SECTORS			NR_DEFAULT_FILE_SECTS		//安装预留大小

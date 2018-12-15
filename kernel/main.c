@@ -8,7 +8,45 @@
 #include "proto.h"
 #include "global.h"
 
+/*tar包解压缩*/
+PUBLIC void untar(const char* filename){
+	printf("extract file: %s\n", filename);
+	struct posix_tar_header* phd;
+	char buf[8192];
+	int fd_out;
+	int size;	
+	int i;													//压缩包内每个文件的大小
+	int fd = open(filename, O_RW);
+	assert(fd != -1);
+	while(1){
+		read(fd, buf, 512);									//读取tar文件头
+		if(buf[0] == 0)
+			break;
 
+		size = 0;
+		phd = (struct posix_tar_header*)buf;
+		fd_out = open(phd->name, O_CREATE | O_RW);		
+		if(fd_out == -1){
+			printf("failed to extract %s\n aborted", phd->name);
+			return;
+		}			
+		assert(fd_out != -1);
+		char* p = phd->size;
+		while(*p)
+			size = (size * 8) + (*p++ - '0');
+
+		printl(" %s(%d)\n", phd->name, size);
+		while(size){
+			int bytes = min(size, 8192);
+			read(fd, buf, ((bytes - 1) / 512 + 1) * 512);	//读取整个扇区(tar文件扇区对齐)
+			write(fd_out, buf, bytes);
+			size -= bytes;
+		}
+		close(fd_out);
+	}
+	close(fd);
+	printf("extract done!\n");
+}
 
 PUBLIC int kernel_main(){
 	disp_str("------------------kernel main begins---------------------\n");
@@ -37,15 +75,14 @@ PUBLIC int kernel_main(){
 			eflags = 0x202; 						//剥夺IO权限
 			prior = 5;
 		}
-		else{
-			p_proc->p_flags = FREE_SLOT;					//进程表未使用
+		
+		if((i >= NR_TASKS + NR_NATIVE_PROCS) && (i < NR_TASKS + NR_PROCS)){
+			proc_table[i].p_flags = FREE_SLOT;					//进程表未使用
 			continue;
 		}
 		/*初始化进程表工作*/
 		strcpy(p_proc->p_name,p_task->name);		
-//		p_proc->pid = i;	
 		p_proc->p_parent = NO_TASK;
-//		p_proc->ldt_sel = selector_ldt;
 		if(strcmp(p_task->name , "Init") != 0){		//普通进程
 			memcpy(&p_proc->ldts[INDEX_LDT_C],&gdt[SELECTOR_KERNEL_CS >> 3],sizeof(Descriptor));		//复制内核全局描述符
 			p_proc->ldts[INDEX_LDT_C].attr1 = DA_C | privilege << 5;									//修改特权级为1
@@ -94,7 +131,6 @@ PUBLIC int kernel_main(){
 			p_proc->filp[k] = 0;					//初始化文件打开表
 		
 		p_proc++;
-//		selector_ldt +=1 << 3;
 	}
 	init_clock();									//初始化时钟
 
@@ -130,7 +166,8 @@ void TestA(){
 }
 
 void TestB(){
-	char tty_name[] = "/dev_tty2";
+	while(1){}
+/*	char tty_name[] = "/dev_tty2";
 	int fd_stdin = open(tty_name, O_RW);
 	int fd_stdout = open(tty_name, O_RW);
 	char rdbuf[128];
@@ -150,7 +187,7 @@ void TestB(){
 			}
 		}
 	}
-	assert(0);
+	assert(0);*/
 }
 
 void TestC(){
@@ -160,24 +197,33 @@ void TestC(){
 }
 
 void Init(){
-	int fd_stdin = open("/dev_tty1", O_RW);
+	int fd_stdin = open("/dev_tty0", O_RW);
 	assert(fd_stdin == 0);
-	int fd_stdout = open("/dev_tty1", O_RW);
+	int fd_stdout = open("/dev_tty0", O_RW);
 	assert(fd_stdout == 1);
+	int i;
 
 	printf("Init() is running     \n");
+
+	/*解压缩应用程序*/
+	untar("cmd.tar");
+
+	char* tty_list[] = {"/dev_tty1","/dev_tty2"};
 	
-	int pid = fork();
-	if(pid){
-		printf("in parent process now, child pid is: %d\n", pid);
+	for(i = 0; i < sizeof(tty_list)/sizeof(tty_list[0]); i++){
+		int pid = fork();
+		if(pid);
+		else{
+			close(fd_stdin);
+			close(fd_stdout);
+			ti_shell(tty_list[i]);
+			assert(0);
+		}
+	}
+	while (1) {
 		int s;
-		int c = wait(&s);
-		printf("child PID %d exit with code %d\n", c, s);
-		spin(" ");
+		int child = wait(&s);
+		printf("child (%d) exited with status: %d.\n", child, s);
 	}
-	else{
-		printf("in child process now, child pid is: %d\n ", getpid());
-		exit(123);
-		spin("child");
-	}
+	
 }

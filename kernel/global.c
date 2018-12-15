@@ -39,3 +39,7 @@ PUBLIC struct dev_drv_map dd[] = {					/*顺序必须与pid一致*/
 /*FS缓冲区  6M-7M   */
 PUBLIC u8*	fsbuf			=	(u8*)0x600000;
 PUBLIC const int FSBUF_SIZE	= 0x100000;
+
+/*MM缓冲区  7M-8M*/
+PUBLIC	u8 *		mmbuf		= (u8*)0x700000;
+PUBLIC	const int	MMBUF_SIZE	= 0x100000; 

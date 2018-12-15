@@ -1,6 +1,6 @@
 [section .text]
 
-global memcpy
+global memcpy     ;导出的函数符号
 global memset
 global strcpy
 
@@ -68,10 +68,12 @@ memset:
 ;-----------------------------------------------------------------------------------------------
 strcpy:
 	push ebp
+	push esi
+	push edi
 	mov ebp,esp
 
-	mov esi,[ebp+12]
-	mov edi,[ebp+8]
+	mov esi,[ebp+20]
+	mov edi,[ebp+16]
 .1:
 	mov al,[esi]
 	mov byte [edi],al
@@ -80,5 +82,7 @@ strcpy:
 	cmp al,0
 	jne .1					;不为 ‘\0’
 
+	pop edi
+	pop esi
 	pop ebp
 	ret

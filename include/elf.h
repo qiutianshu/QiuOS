@@ -35,7 +35,7 @@ typedef struct{
     Elf32_Word p_memsz;                             /*该段在内存映像中占用的字节数*/
     Elf32_Word p_flags;                             /*段标志*/
     Elf32_Word p_align;                             /*p_vaddr是否对齐*/
-} Elf32_phdr;
+} Elf32_Phdr;
 
 typedef struct{
 	Elf32_Word sh_name;								/*节区名称*/

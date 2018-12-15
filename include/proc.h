@@ -30,6 +30,7 @@
 
 #define PROC_IMG_DEFAULT_SIZE 		0x100000				//用户进程空间默认大小(1M粒度)
 #define PROC_BASE					0xa00000				//10M以上分配给用户进程
+#define INIT_STACK					0x400 					//进程空间初始栈大小
 
 #define MEMSIZE						0x900					//存放可用内存大小的地方
 

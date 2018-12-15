@@ -108,10 +108,10 @@ PRIVATE void mkfs(){
 
 	/*设置inode map*/
 	memset(fsbuf, 0, 512);
-	for(i = 0; i < NR_CONSOLES + 2; i++)
+	for(i = 0; i < NR_CONSOLES + 3; i++)
 		fsbuf[0] |= 1 << i;
 
-	assert(fsbuf[0] == 0x1f);
+	assert(fsbuf[0] == 0x3f);
 
 	rw_sector(DEV_WRITE, ROOT_DEV, 2, 512, TASK_FS, fsbuf);			//根设备第二扇区写入inode map
 
@@ -129,11 +129,64 @@ PRIVATE void mkfs(){
 	for(i = 1; i < sb.nr_smap_sects; i++)
 		rw_sector(DEV_WRITE, ROOT_DEV, 2 + sb.nr_imap_sects + i, 512, TASK_FS, fsbuf);	//sector map 剩余部分归零
 
+	/*安装cmd.tar*/
+	int bit_off				 = INSTALL_FIRST_SECTOR - sb.n_1st_sect + 1;
+	int bit_off_in_sector	 = bit_off % (8 * 512);	
+	int byte_off_in_sector	 = bit_off_in_sector / 8;			//扇区内字节偏移
+	int cur_sector			 = bit_off / (8 * 512);				//当前读写扇区
+	int bits_left			 = INSTALL_NR_SECTORS;				//剩余位数
+	int bytes_left;												//剩余字节数
+
+	printl("sector map of cmd.tar start at:%x\n", 512 * (geo.base + 2 + sb.nr_imap_sects + cur_sector) + byte_off_in_sector);
+
+	rw_sector(DEV_READ, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector, 512, TASK_FS, fsbuf);
+
+	if(fsbuf[byte_off_in_sector] != 0xff){						//填充不满1字节的部分
+		for(i = (bit_off_in_sector % 8); i < 8; i++){			
+			fsbuf[byte_off_in_sector] |= 1 << i;
+			bits_left--;
+		}	
+		byte_off_in_sector++;	  
+	}
+	
+	bytes_left = bits_left / 8;
+
+	while(bytes_left){											//填充整字节
+		if(byte_off_in_sector == 512){							//满1个扇区写回磁盘
+			rw_sector(DEV_WRITE, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector,512, TASK_FS, fsbuf);
+			byte_off_in_sector = 0;								//字节偏移归零
+			cur_sector++;
+			rw_sector(DEV_READ, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector, 512, TASK_FS, fsbuf);	//读入下一个扇区
+		}
+		else{
+			fsbuf[byte_off_in_sector] = 0xff;					//写整字节
+			byte_off_in_sector++;
+			bytes_left--;
+			bits_left = bits_left - 8;
+		}												
+	}
+
+	if(byte_off_in_sector == 512){
+		rw_sector(DEV_WRITE, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector,512, TASK_FS, fsbuf);
+		byte_off_in_sector = 0;								
+		cur_sector++;
+		rw_sector(DEV_READ, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector, 512, TASK_FS, fsbuf);	//读入下一个扇区
+	}
+	
+	i = 0;
+	while(bits_left){											//填充最后一个字节
+		fsbuf[byte_off_in_sector] |= 1 << i;
+		i++;
+		bits_left--;
+	}		
+	rw_sector(DEV_WRITE, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector,512, TASK_FS, fsbuf);//写回扇区
+
+
 	/*设置根目录inode*/
 	memset(fsbuf, 0, 512);
 	struct inode* pi = (struct inode*)fsbuf;
 	pi->i_mode 			= I_DIRECTORY;
-	pi->i_size 			= DIR_ENTRY_SIZE * 4;  	//4个文件 . tty0 tty1 tty2
+	pi->i_size 			= DIR_ENTRY_SIZE * 5;  	//5个文件 . tty0 tty1 tty2 cmd.tar
 	pi->i_start_sect	= sb.n_1st_sect;		//根目录起始扇区
 	pi->i_nr_sects    	= NR_DEFAULT_FILE_SECTS;
 
@@ -145,6 +198,11 @@ PRIVATE void mkfs(){
 		pi->i_nr_sects  = 0;
 	}
 
+	pi = (struct inode*)(fsbuf + (INODE_SIZE * (NR_CONSOLES + 1)));		//设置cmd.tar的inode
+	pi->i_mode = I_REGULAR;
+	pi->i_size = INSTALL_NR_SECTORS * 512;
+	pi->i_start_sect = INSTALL_FIRST_SECTOR;
+	pi->i_nr_sects = INSTALL_NR_SECTORS;
 	rw_sector(DEV_WRITE, ROOT_DEV, 2 + sb.nr_imap_sects + sb.nr_smap_sects, 512, TASK_FS, fsbuf);
 	/*设置根目录项*/
 	memset(fsbuf, 0, 512);
@@ -157,6 +215,8 @@ PRIVATE void mkfs(){
 		pde->inode_nr = i + 2;				//dev_tty0
 		sprintf(pde->name, "dev_tty%d", i);
 	}
+	(++pde)->inode_nr = NR_CONSOLES + 2;
+	strcpy(pde->name, "cmd.tar");
 	rw_sector(DEV_WRITE, ROOT_DEV, sb.n_1st_sect, 512, TASK_FS, fsbuf);
 }
 
@@ -243,6 +303,9 @@ PUBLIC void task_fs(){
 				break;
 			case EXIT:
 				fs_msg.RETVAL = fs_exit();
+				break;
+			case FILE_STAT:
+				fs_msg.RETVAL = fs_stat();
 				break;
 			default:
 				break;

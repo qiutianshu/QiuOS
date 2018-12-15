@@ -21,8 +21,10 @@ PUBLIC int do_fork(){
 			break;
 	}
 	assert(i >= NR_TASKS + NR_NATIVE_PROCS);
-	if(i == NR_TASKS + NR_PROCS)
+	if(i == NR_TASKS + NR_PROCS){
+		printl("full full");
 		return -1;		  											//进程表已满
+	}
 
 	int child_pid = i;												//子进程号
 	int pid = mm_msg.source;										//父进程号

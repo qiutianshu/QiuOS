@@ -20,7 +20,8 @@ OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protec
 				kernel/keyboard.o kernel/tty.o kernel/console.o kernel/printf.o lib/misc.o kernel/systask.o \
 				kernel/hd.o fs/fs.o fs/open.o lib/usr/open.o lib/usr/rdwt.o fs/read_write.o lib/usr/unlink.o \
 				fs/unlink.o lib/string.o mm/mm.o mm/forkexit.o lib/usr/fork.o lib/usr/exit.o lib/usr/wait.o \
-				mm/exit.o lib/usr/getpid.o lib/cstring.o
+				mm/exit.o lib/usr/getpid.o lib/cstring.o lib/usr/exec.o mm/exec.o lib/usr/stat.o fs/stat.o \
+				kernel/shell.o
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
@@ -85,7 +86,7 @@ kernel/tty.o:kernel/tty.c include/const.h include/type.h include/protect.h inclu
 kernel/start.o:kernel/start.c include/const.h include/type.h include/protect.h include/proto.h include/global.h
 			$(CC) $(CFLAGS) -o $@ $<
 
-kernel/main.o:kernel/main.c include/const.h include/type.h include/protect.h include/proto.h include/global.h include/proc.h
+kernel/main.o:kernel/main.c include/const.h include/type.h include/tty.h include/fs.h include/protect.h include/proto.h include/global.h include/proc.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/global.o:kernel/global.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h
@@ -95,6 +96,9 @@ kernel/i8259.o:kernel/i8259.c include/const.h include/type.h include/protect.h i
 			$(CC) $(CFLAGS) -o $@ $<
 
 kernel/clock.o:kernel/clock.c include/const.h include/type.h include/protect.h include/proto.h include/proc.h include/global.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+kernel/shell.o:kernel/shell.c include/const.h include/type.h include/tty.h include/fs.h include/protect.h include/proto.h include/global.h include/proc.h
 			$(CC) $(CFLAGS) -o $@ $<
 
 fs/fs.o:fs/fs.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
@@ -108,6 +112,9 @@ fs/read_write.o:fs/read_write.c include/const.h include/type.h include/protect.h
 
 fs/unlink.o:fs/unlink.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 
+			$(CC) $(CFLAGS) -o $@ $<
+
+fs/stat.o:fs/stat.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
  
 lib/usr/open.o:lib/usr/open.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
@@ -131,6 +138,12 @@ lib/usr/wait.o:lib/usr/wait.c include/const.h include/type.h include/protect.h i
 lib/usr/getpid.o:lib/usr/getpid.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 			$(CC) $(CFLAGS) -o $@ $<
 
+lib/usr/exec.o:lib/usr/exec.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
+lib/usr/stat.o:lib/usr/stat.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
 kernel/hd.o:kernel/hd.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h
 
 lib/klib.o:lib/klib.c include/proto.h include/const.h include/type.h
@@ -151,9 +164,12 @@ mm/forkexit.o: mm/forkexit.c include/const.h include/type.h include/protect.h in
 mm/exit.o:mm/exit.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
 	        $(CC) $(CFLAGS) -o $@ $<
 
+mm/exec.o:mm/exec.c include/const.h include/type.h include/protect.h include/global.h include/proc.h include/tty.h include/console.h include/hd.h include/fs.h
+			$(CC) $(CFLAGS) -o $@ $<
+
 kernel/kernel.bin:$(OBJS)
-			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/printf.o lib/usr/getpid.o lib/usr/exit.o lib/usr/wait.o \
-			lib/usr/fork.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o mm/exit.o mm/mm.o mm/forkexit.o fs/unlink.o fs/open.o fs/read_write.o fs/fs.o \
+			ld -s -m elf_i386 -Ttext 0x30400 -o kernel/kernel.bin kernel/kernel.o kernel/main.o kernel/shell.o kernel/printf.o lib/usr/stat.o lib/usr/exec.o lib/usr/getpid.o lib/usr/exit.o lib/usr/wait.o \
+			lib/usr/fork.o lib/usr/unlink.o lib/usr/rdwt.o lib/usr/open.o mm/exec.o mm/exit.o mm/mm.o mm/forkexit.o fs/stat.o fs/unlink.o fs/open.o fs/read_write.o fs/fs.o \
 			lib/misc.o kernel/systask.o kernel/tty.o kernel/console.o kernel/keyboard.o kernel/hd.o kernel/clock.o kernel/proc.o kernel/syscall.o \
 			kernel/start.o kernel/protect.o kernel/i8259.o lib/string.o lib/cstring.o lib/klib.o lib/kliba.o kernel/global.o
 

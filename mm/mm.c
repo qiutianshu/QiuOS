@@ -14,6 +14,7 @@ PUBLIC void task_mm(){
 	total_memory_size = *(int*)MEMSIZE;
 	printl("Total memory size: %dMb \n", (total_memory_size)/(1024 * 1024));
 	int reply = 1;
+	int i = 0;
 	while(1){
 		send_recv(RECEIVE, ANY, &mm_msg);
 		int src = mm_msg.source;
@@ -27,8 +28,11 @@ PUBLIC void task_mm(){
 				reply = 0;
 				break;
 			case WAIT:
-				do_wait();				//返回退出进程的进程号
+				do_wait();					//返回退出进程的进程号
 				reply = 0;
+				break;
+			case EXEC:
+				mm_msg.RETVAL = do_exec();	//这里还需要给exec出来的进程发送消息解除阻塞
 				break;
 			default:
 				panic("unknown message!");
