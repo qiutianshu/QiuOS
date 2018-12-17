@@ -14,20 +14,25 @@ PUBLIC void untar(const char* filename){
 	struct posix_tar_header* phd;
 	char buf[8192];
 	int fd_out;
-	int size;	
-	int i;													//压缩包内每个文件的大小
+	int size;												//压缩包内每个文件的大小
+	int i = 0;													
 	int fd = open(filename, O_RW);
 	assert(fd != -1);
 	while(1){
 		read(fd, buf, 512);									//读取tar文件头
-		if(buf[0] == 0)
+		if(buf[0] == 0){
+			if(i == 0)
+				printf("cmd.tar is the latest\n");
 			break;
+		}
+		i++;
 
 		size = 0;
 		phd = (struct posix_tar_header*)buf;
-		fd_out = open(phd->name, O_CREATE | O_RW);		
+		fd_out = open(phd->name, O_CREATE | O_RW | O_TRUNC);		
 		if(fd_out == -1){
 			printf("failed to extract %s\n aborted", phd->name);
+			close(fd);
 			return;
 		}			
 		assert(fd_out != -1);
@@ -44,9 +49,15 @@ PUBLIC void untar(const char* filename){
 		}
 		close(fd_out);
 	}
+	if(i){
+		proc_table[getpid()].filp[fd]->fd_pos = 0;			//tar包第一个字节设置为0
+		buf[0] = 0;
+		int n = write(fd, buf, 1);
+		assert(n == 1);
+	}
 	close(fd);
 	printf("extract done!\n");
-}
+} 
 
 PUBLIC int kernel_main(){
 	disp_str("------------------kernel main begins---------------------\n");
@@ -144,65 +155,15 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
-	while(1){
-	}
-/*	char* filename[] = {"/qts","/foo2","foo3","foo4"};
-	char* rfilename[] = {"/qts","/foo2","/dev_tty1","/"};
-	int fd;
-	for(int i = 0; i < 4; i++){
-		fd = open(filename[i], O_CREATE | O_RW);			//新建QTS文件
-	//	write(fd, "qwertyui", 8);
-		close(fd);
-	}
-	spin("create file");
-	for(int j = 0; j < 4; j++){
-		if(unlink(rfilename[j]) == 0)
-			printl("file removed : %s\n ", rfilename[j]);
-		else
-			printl("file removed failed : %s\n ",rfilename[j]);
-	}
+	while(1){}
 
-	spin("TestA");*/
 }
 
 void TestB(){
 	while(1){}
-/*	char tty_name[] = "/dev_tty2";
-	int fd_stdin = open(tty_name, O_RW);
-	int fd_stdout = open(tty_name, O_RW);
-	char rdbuf[128];
-
-	printf("\n");
-	while(1){
-		printf("%s", "$ ");
-		int r = read(fd_stdin, rdbuf, 77);
-		rdbuf[r] = 0;
- 
-		if(strcmp(rdbuf, "hallo") == 0){
-			printf("%s\n", "hallo qts");
-		}
-		else{
-			if(rdbuf[0]){
-				printf("{%s}\n", rdbuf);
-			}
-		}
-	}
-	assert(0);*/
 }
 
 void TestC(){
-/*	int fd_stdin = open("/dev_tty2", O_RW);
-	assert(fd_stdin == 0);
-	int fd_stdout = open("/dev_tty2", O_RW);
-	assert(fd_stdout == 1);
-
-	char rdbuf[80];
-	while(1){
-		int r = read(0, rdbuf, 70);
-
-		rdbuf[r] = 0;
-		printf("%s\n",rdbuf);
-	}*/
 	while(1){}
 }
 
@@ -210,7 +171,7 @@ void Init(){
 	int fd_stdin = open("/dev_tty0", O_RW);
 	assert(fd_stdin == 0);
 	int fd_stdout = open("/dev_tty0", O_RW);
-	assert(fd_stdout == 1);
+	assert(fd_stdout == 1); 
 	
 	int i;
 

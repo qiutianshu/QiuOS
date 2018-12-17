@@ -76,6 +76,7 @@ struct status{
 
 #define O_CREATE		1
 #define O_RW 			2
+#define O_TRUNC			4
 
 #define INSTALL_FIRST_SECTOR		0x8000						//cmd.tar首扇区号
 #define INSTALL_NR_SECTORS			NR_DEFAULT_FILE_SECTS		//安装预留大小

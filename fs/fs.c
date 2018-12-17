@@ -137,7 +137,7 @@ PRIVATE void mkfs(){
 	int bits_left			 = INSTALL_NR_SECTORS;				//剩余位数
 	int bytes_left;												//剩余字节数
 
-	printl("sector map of cmd.tar start at:%x\n", 512 * (geo.base + 2 + sb.nr_imap_sects + cur_sector) + byte_off_in_sector);
+	//printl("sector map of cmd.tar start at:%x\n", 512 * (geo.base + 2 + sb.nr_imap_sects + cur_sector) + byte_off_in_sector);
 
 	rw_sector(DEV_READ, ROOT_DEV, 2 + sb.nr_imap_sects + cur_sector, 512, TASK_FS, fsbuf);
 
@@ -264,7 +264,13 @@ PRIVATE	void init_fs(){
 	msg.DEVICE = MINOR(ROOT_DEV);
 	send_recv(BOTH, dd[MAJOR(ROOT_DEV)].drv_pid, &msg);
 
-	mkfs();
+	/*读取超级块*/
+	rw_sector(DEV_READ, ROOT_DEV, 1, 512, TASK_FS, fsbuf);				//如果发现magic字段
+	sb = (struct super_block*)fsbuf;									//不刷新文件系统
+	if(sb->magic != MAGIC_V1){
+		printl("make file system...\n");
+		mkfs();
+	}
 
 	read_super_block(ROOT_DEV);
 	sb = get_super_block(ROOT_DEV);

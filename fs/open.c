@@ -150,7 +150,39 @@ PUBLIC int do_open(){
 	inode_nr = search_file(pathname);
 	
 	struct inode* pin = 0;
-	if(flag & O_CREATE){
+	if(inode_nr == 0){								//文件不存在
+		if(flag & O_CREATE)
+			pin = create_file(pathname, flag);
+		else{
+			return -1;
+		}
+	}
+	else if(flag & O_RW){							//文件存在
+		if((flag & O_CREATE) && (!(flag & O_TRUNC))){
+			printl("FS: file exists: %s\n",pathname);
+			return -1;
+		}
+		assert((flag == O_RW) || 
+			   (flag == (O_RW | O_TRUNC)) ||
+			   (flag == (O_RW | O_TRUNC | O_CREATE)));
+
+		char filename[MAX_PATH];
+		struct inode* dir_inode;
+		if(strip_path(filename, pathname, &dir_inode) != 0)		//路径转换为文件名 返回文件目录的inode
+			return -1;
+
+		pin = get_inode(dir_inode->i_dev, inode_nr);				//文件inode装入inode_table				
+	}
+	else{											//文件存在，但没有O_RW标志
+		printl("FS: file exists: %s\n",pathname);
+		return -1;
+	}
+	if(flag & O_TRUNC){
+		assert(pin);
+		pin->i_size = 0;
+		sync_inode(pin);
+	}
+/*	if(flag & O_CREATE){
 		if(inode_nr){
 			printl("file exists!\n ");
 			return -1;
@@ -166,9 +198,7 @@ PUBLIC int do_open(){
 		if(strip_path(filename, pathname, &dir_inode) != 0)				//路径转换为文件名 返回文件目录的inode
 			return -1;
 
-		pin = get_inode(dir_inode->i_dev, inode_nr);						//文件inode装入inode_table
-
-	}
+	}*/
 	/*装载顺序 filp、inode_table、file_desc_table*/
 	if(pin){
 
@@ -199,6 +229,7 @@ PUBLIC int do_open(){
 	}
 	else
 		return -1;
+
 	return fd;
 }
 
@@ -222,16 +253,17 @@ PUBLIC int strip_path(char*filename, char* path, struct inode** ppinode){
 	char* s = path;
 	char* t = filename;
 
-	if(s == 0)
+	if(s == 0){
 		return -1;
-
+	}
+	
 	if(*s == '/')
 		s++;
 
 	while(*s){
-		if(*s == '/')
+		if(*s == '/'){
 			return -1;
-
+		}
 		*t++ = *s++;
 		if(t - filename >= MAX_NAME)
 			break;

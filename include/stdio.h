@@ -1,6 +1,11 @@
 #ifndef _QIUOS_STDIO_H_
 #define _QIUOS_STDIO_H_
 
+
+#define PUBLIC 
+#define PRIVATE static
+#define EXTERN	extern 
+
 #define UNUSED						-10
 #define TASK_TTY					0		//TTY任务
 #define TASK_SYS					1		//系统进程号
@@ -9,9 +14,9 @@
 #define TASK_MM 					4		//内存管理
 #define PROC_INIT					5		//Init进程号
 
-#define PUBLIC 
-#define PRIVATE static
-#define EXTERN	extern 
+#define O_CREATE					1
+#define O_RW 						2
+#define O_TRUNC 					4
 
 void assertion_failure(char* exp,char* file,char* base_file,int line);
 #define assert(exp)		if(exp);\
