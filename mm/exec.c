@@ -25,8 +25,7 @@ PUBLIC int do_exec(){
 	argv_len += sizeof(char*);
 
 	char** ff = init_stack;
-
-/*
+/*	
 -------------------+--+--+--+--+--------+--------------------+-------+---------------+
   ......           |  |  |  |  | ....|  |  str1|      |str3  |       |  ...          |
                    |  |  |  |  |     | 0|      |str2  |      |str4   |               |
@@ -39,10 +38,9 @@ PUBLIC int do_exec(){
                      +---------------------+
 */
 	for(; *p !=0; p++){										 //遍历参数列表
-		phy_cpy((char*)init_stack + argv_len, *p, strlen(*p));      //复制参数
-		printl("%s\n",(char*)init_stack + argv_len);
+		phy_cpy((char*)init_stack + argv_len, va2la(src, *p), strlen(va2la(src, *p)));      //复制参数
 		*ff++ = PROC_IMG_DEFAULT_SIZE - INIT_STACK + argv_len;
-		argv_len += strlen(*p);
+		argv_len += strlen(va2la(src,*p));
 		*((char*)init_stack + argv_len) = 0;
 		argv_len++;
 		argc++;

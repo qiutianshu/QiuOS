@@ -32,7 +32,7 @@ PUBLIC int do_fork(){
 	memcpy(p, &proc_table[pid], sizeof(PROCESS));					//复制父进程表
 	p->ldt_sel = child_ldt_sel;
 	p->p_parent = pid;												//设置父进程号
-	sprintf(p->p_name, "%s %d", proc_table[pid].p_name, child_pid);		//子进程名 = 父进程名　＋　子进程号
+	sprintf(p->p_name, "%s %d", proc_table[pid].p_name, child_pid);	//子进程名 = 父进程名　＋　子进程号
 
 	/*复制父进程ldt*/
     Descriptor* des = &proc_table[pid].ldts[INDEX_LDT_C];	//父进程代码段

@@ -23,6 +23,20 @@ PUBLIC void task_sys(){
 				msg.type = SYSCALL_RET;
 				send_recv(SEND, src, &msg);
 				break;
+			case FIND_PROCS:
+				if(proc_table[msg.PID].p_flags != FREE_SLOT){
+					char* name = va2la(src, msg.BUF);
+					int len = strlen(proc_table[msg.PID].p_name);
+					phy_cpy(name, proc_table[msg.PID].p_name, len);
+					name[len] = 0;
+					msg.FLAGS = 1;
+				}
+				else
+					msg.FLAGS = 0;
+				msg.type = SYSCALL_RET;
+				
+				send_recv(SEND, src, &msg);
+				break;
 			default:
 				panic("unknown message type!!");
 				break;

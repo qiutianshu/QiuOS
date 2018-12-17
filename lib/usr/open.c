@@ -25,7 +25,6 @@ PUBLIC int close(int fd){
 	MESSAGE msg;
 	msg.type		= FILE_CLOSE;
 	msg.FD 			= fd;
-
 	send_recv(BOTH, TASK_FS, &msg);
 	assert(msg.type == SYSCALL_RET); 
 	return msg.RETVAL;

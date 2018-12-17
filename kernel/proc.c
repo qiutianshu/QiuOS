@@ -31,7 +31,6 @@ PUBLIC void schedule(){
 				if(!p->p_flags)
 					p->ticks = p->priority;
 	}
-	
 }
 
 //PUBLIC void sys_sendrec()

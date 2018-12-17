@@ -1,6 +1,14 @@
 #ifndef _QIUOS_STDIO_H_
 #define _QIUOS_STDIO_H_
 
+#define UNUSED						-10
+#define TASK_TTY					0		//TTY任务
+#define TASK_SYS					1		//系统进程号
+#define TASK_HD						2		//硬盘驱动进程号
+#define TASK_FS						3		//文件系统
+#define TASK_MM 					4		//内存管理
+#define PROC_INIT					5		//Init进程号
+
 #define PUBLIC 
 #define PRIVATE static
 #define EXTERN	extern 

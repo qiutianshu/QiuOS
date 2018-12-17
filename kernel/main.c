@@ -35,7 +35,7 @@ PUBLIC void untar(const char* filename){
 		while(*p)
 			size = (size * 8) + (*p++ - '0');
 
-		printl(" %s(%d)\n", phd->name, size);
+		printf(" %s(%d)\n", phd->name, size);
 		while(size){
 			int bytes = min(size, 8192);
 			read(fd, buf, ((bytes - 1) / 512 + 1) * 512);	//读取整个扇区(tar文件扇区对齐)
@@ -191,9 +191,19 @@ void TestB(){
 }
 
 void TestC(){
+/*	int fd_stdin = open("/dev_tty2", O_RW);
+	assert(fd_stdin == 0);
+	int fd_stdout = open("/dev_tty2", O_RW);
+	assert(fd_stdout == 1);
+
+	char rdbuf[80];
 	while(1){
-		milli_delay(200);
-	}
+		int r = read(0, rdbuf, 70);
+
+		rdbuf[r] = 0;
+		printf("%s\n",rdbuf);
+	}*/
+	while(1){}
 }
 
 void Init(){
@@ -201,22 +211,20 @@ void Init(){
 	assert(fd_stdin == 0);
 	int fd_stdout = open("/dev_tty0", O_RW);
 	assert(fd_stdout == 1);
+	
 	int i;
-
-	printf("Init() is running     \n");
 
 	/*解压缩应用程序*/
 	untar("cmd.tar");
-
+	close(fd_stdin);
+	close(fd_stdout);
 	char* tty_list[] = {"/dev_tty1","/dev_tty2"};
 	
 	for(i = 0; i < sizeof(tty_list)/sizeof(tty_list[0]); i++){
 		int pid = fork();
 		if(pid);
 		else{
-			close(fd_stdin);
-			close(fd_stdout);
-			ti_shell(tty_list[i]);
+			ti_shell(tty_list[i]);			//ti_shell
 			assert(0);
 		}
 	}

@@ -24,12 +24,11 @@ PRIVATE void init_tty(TTY* p_tty){
 
 	if(nr_tty == 0){
 		p_tty->p_console->cursor = disp_pos / 2;					//第一个控制台的光标位置为
-		//disp_pos = 0;
 	}
-	else{
+/*	else{
 		disp_char(p_tty->p_console,nr_tty + '0');
 		disp_char(p_tty->p_console,'#');
-	}
+	}*/
 	set_cursor(p_tty->p_console->cursor);
 
 }
@@ -153,8 +152,6 @@ PUBLIC void task_tty(){
 		assert(src != TASK_TTY);
 
 		TTY* ptty = &tty_table[msg.DEVICE];
-
-	//	printl("in tty msg.type %d PROC_NR %d\n ", msg.type, msg.PROC_NR);
 
 		switch(msg.type){
 			case DEV_OPEN:

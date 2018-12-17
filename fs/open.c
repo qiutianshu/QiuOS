@@ -130,12 +130,12 @@ PUBLIC int do_open(){
 	pathname[name_len] = 0;
 
 	for(i = 0; i < NR_FILES; i++){				//找文件句柄
-		if(!caller->filp[i]){
+		if(caller->filp[i] == 0){
 			fd = i;
 			break;
 		}
 	}
-
+	
 	if(fd < 0 || fd >= NR_FILES)
 		panic("filp is full!!(PID: %d)", proc2pid(caller));
 
@@ -143,7 +143,7 @@ PUBLIC int do_open(){
 		if(file_desc_table[i].fd_inode == 0)
 			break;
 	}
-
+	
 	if(i >= NR_FILE_DESC)
 		panic("file_desc_table is full!!(PID: %d)",proc2pid(caller));
 
@@ -165,6 +165,7 @@ PUBLIC int do_open(){
 		struct inode* dir_inode;
 		if(strip_path(filename, pathname, &dir_inode) != 0)				//路径转换为文件名 返回文件目录的inode
 			return -1;
+
 		pin = get_inode(dir_inode->i_dev, inode_nr);						//文件inode装入inode_table
 
 	}
@@ -177,7 +178,7 @@ PUBLIC int do_open(){
 		file_desc_table[i].fd_mode = flag;	
 		file_desc_table[i].fd_cnt = 1;				 			
 		file_desc_table[i].fd_pos  = 0;
-
+		
 		int imode = pin->i_mode & I_TYPE_MASK;
 
 		if(imode == I_CHAR_SPECIAL){
@@ -186,7 +187,6 @@ PUBLIC int do_open(){
 											//字符设备起始扇区为其设备号
 			msg.DEVICE = MINOR(pin->i_start_sect);
 			assert(MAJOR(pin->i_start_sect) == TASK_TTY);
-//			printl("minor device number is %d\n name is %s\n", msg.DEVICE, pathname);
 			msg.PROC_NR = fs_msg.source;
 
 			send_recv(BOTH, dd[MAJOR(pin->i_start_sect)].drv_pid, &msg); 
@@ -199,8 +199,6 @@ PUBLIC int do_open(){
 	}
 	else
 		return -1;
-
-
 	return fd;
 }
 
@@ -209,6 +207,7 @@ PUBLIC int do_close(){
 	int i = 0;
 	int fd = fs_msg.FD;
 	put_inode(caller->filp[fd]->fd_inode);				//inode计数减一
+
 	caller->filp[fd]->fd_inode = 0;
 	caller->filp[fd] = 0;
 	return 0;

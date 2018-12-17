@@ -13,15 +13,16 @@ PUBLIC void ti_shell(const char* tty){
 	assert(fd_stdin == 0);
 	int fd_stdout = open(tty, O_RW);
 	assert(fd_stdout == 1);
-	char rdbuf[128];
+	char rdbuf[80];
+
+	sprintf(proc_table[getpid()].p_name, "ti_shell@%s", tty);
+
 	while(1){
-		//printf("/$ ");
-		write(1,"/$ ", 3);
+		printf("tishell@tty%d:\\$", tty[8] - '0');
 		int r = read(0, rdbuf, 70);
 		rdbuf[r] = 0;
 		int argc = 0;
 		char* argv[0x400];
-		//char** pt = argv;
 		char* p = rdbuf;
 		char* s;
 		int word = 0;
@@ -53,10 +54,6 @@ PUBLIC void ti_shell(const char* tty){
 				wait(&s);
 			}
 			else{
-			//	printf("argv[0]%s, argv[1]%s, argv[2]%s\n", argv[0],argv[1],argv[2]);
-			//	char* parg = (char*)&argv[1];
-			//	char **p = (char**)parg;
-
 				execv(argv[0],argv);
 			}
 		}

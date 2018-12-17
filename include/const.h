@@ -60,7 +60,8 @@ enum msgtype{						//消息类型
 	EXIT,
 	WAIT,
 	GET_PID,
-	EXEC
+	EXEC,
+	FIND_PROCS
 };
 
 #define DIOCTL_GET_GEO	1
