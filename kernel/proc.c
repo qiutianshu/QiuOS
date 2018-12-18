@@ -19,7 +19,7 @@ PUBLIC void schedule(){
 	int greatest_ticks = 0;
 	while(!greatest_ticks){
 		for(p = proc_table; p<proc_table + NR_TASKS + NR_PROCS; p++){
-			if(!p->p_flags){											//可运行状态
+			if(p->p_flags == 0){											//可运行状态
 				if(p->ticks > greatest_ticks){
 					greatest_ticks = p->ticks;
 					p_proc_ready = p;
@@ -170,20 +170,6 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 
 	}
 
-	if((!(p_recv->has_int_msg)) && (src == INTERRUPT)){		//中断消息还没来
-		p_recv->p_flags |= RECEIVING;					
-		p_recv->p_msg = msg;
-		p_recv->p_recvfrom = INTERRUPT;
-		block(p_recv);									
-
-		assert(p_recv->p_flags == RECEIVING);	
-		assert(p_recv->p_msg != 0);
-		assert(p_recv->p_recvfrom = INTERRUPT);
-		assert(p_recv->p_sendto == NO_TASK);
-		assert(p_recv->has_int_msg == 0);
-
-		return 0;
-	}
 	if(src == ANY){									
 		if(p_recv->q_sending){									//消息队列不为空
 			p_from = p_recv->q_sending;
@@ -255,12 +241,6 @@ PRIVATE int recv_msg(PROCESS* p_proc, int src, MESSAGE* msg){
 			p_recv->p_recvfrom = proc2pid(p_from);
 
 		block(p_recv);									//当消息队列为空，或者目标进程未准备好，进程阻塞
-
-		assert(p_recv->p_flags == RECEIVING);			//确保B进程相关标志设置正确
-		assert(p_recv->p_msg != 0);
-		assert(p_recv->p_recvfrom != NO_TASK);
-		assert(p_recv->p_sendto == NO_TASK);
-		assert(p_recv->has_int_msg == 0);
 	}
 	return 0;
 }

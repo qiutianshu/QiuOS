@@ -49,7 +49,7 @@ PUBLIC int do_rw(){
 
 		return fs_msg.COUNT;
 	}
-	else{														//普通文件
+	else{						
 		assert((mode == I_REGULAR) || (mode == I_DIRECTORY));
 		int start_sect	= p->i_start_sect + f_pos / 512;		//起始扇区
 		int end_sect;
@@ -66,7 +66,7 @@ PUBLIC int do_rw(){
 		int left = len;
 
 		for(i = start_sect; i <= end_sect; i += chunk){
-			rw_sector(DEV_READ, p->i_dev, i, chunk * 512, TASK_FS, fsbuf);
+			rw_sector(DEV_READ, p->i_dev, i, chunk * 512, TASK_FS, fsbuf);			//问题
 			bytes = min(left, chunk * 512 - offset);
 
 			if(fs_msg.type == FILE_READ){

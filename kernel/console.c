@@ -9,7 +9,7 @@
 #include "proto.h"
 #include "global.h"
 
-PRIVATE void set_vga_start_addr(u32 addr){
+PUBLIC void set_vga_start_addr(u32 addr){
 	disable_int();
 	out_byte(CRT_CTRL_REG,START_ADDR_H);
 	out_byte(CRT_DATA_REG,(addr >> 8) & 0xff);

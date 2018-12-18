@@ -34,6 +34,7 @@ PUBLIC void hd_handler();										//硬盘中断处理
 PUBLIC void in_process(TTY* p_tty, u32 key);
 PUBLIC void disp_char(CONSOLE* p_cone,char ch);
 PUBLIC void set_cursor(unsigned int position);
+PUBLIC void set_vga_start_addr(u32 addr);
 PUBLIC void switch_console(int nr_console);						//切换控制台
 PUBLIC void scroll_screen(CONSOLE* p_cone,int direction);		//翻屏
 PUBLIC int print(char* fmt, ...);

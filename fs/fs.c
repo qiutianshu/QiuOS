@@ -81,7 +81,9 @@ PRIVATE void mkfs(){
 	sb.nr_smap_sects	= sb.nr_sects / bits_per_sect + 1;		//sector maps 占用扇区数
 	sb.n_1st_sect 		= 2 + sb.nr_imap_sects + sb.nr_inode_sects + sb.nr_smap_sects;		//数据区第一个扇区号
 	sb.root_inode		= ROOT_INODE;
-	sb.inode_size 		= INODE_SIZE;		
+	sb.inode_size 		= INODE_SIZE;	
+
+	printl("nr_smap_sects: %d\n",sb.nr_smap_sects);	
 
 	struct inode x;
 	sb.inode_isize_off	= (int)&x.i_size - (int)&x;

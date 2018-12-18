@@ -155,6 +155,28 @@ PUBLIC int kernel_main(){
 
 
 void TestA(){
+//	while(1){}
+/*	char buf[32];
+	int fd = open("/qts", O_RW | O_CREATE);
+	int fd1 = open("/qwerr",O_RW | O_CREATE);
+	int fd2 = open("/ccc", O_RW | O_CREATE);
+	int fd3 = open("/iiii",O_RW | O_CREATE);
+	int fd4 = open("/dev_tty2",O_RW);
+
+
+	write(fd3,"eeee",4);
+	close(fd3);
+	int fd5 = open("/iiii",O_RW);
+	read(fd5,buf,4);
+
+	buf[4] = 0;
+	write(fd4,buf,4);
+	
+	close(fd5);
+	close(fd4);
+	close(fd1);
+	close(fd2);
+	close(fd);*/
 	while(1){}
 
 }
@@ -194,5 +216,6 @@ void Init(){
 		int child = wait(&s);
 		printf("child (%d) exited with status: %d.\n", child, s);
 	}
+	while(1){}
 	
 }

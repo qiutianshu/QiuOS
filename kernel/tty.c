@@ -25,10 +25,6 @@ PRIVATE void init_tty(TTY* p_tty){
 	if(nr_tty == 0){
 		p_tty->p_console->cursor = disp_pos / 2;					//第一个控制台的光标位置为
 	}
-/*	else{
-		disp_char(p_tty->p_console,nr_tty + '0');
-		disp_char(p_tty->p_console,'#');
-	}*/
 	set_cursor(p_tty->p_console->cursor);
 
 }
@@ -219,7 +215,22 @@ PUBLIC void in_process(TTY* p_tty,u32 key){
 }
 
 PUBLIC void disp_char(CONSOLE* p_cone, char ch){
-	u8* pos = (u8*)(CONSOLE_BASE + p_cone->cursor * 2);	//指向当前控制台显示地址
+	u8* pos;
+	int nr_tty = p_cone - console_table;
+	/***************************************************************************/
+	if(p_cone->cursor  >= p_cone->origin_addr + p_cone->mem_limit - SCREEN_WIDTH){				//超过显示范围
+		pos = CONSOLE_BASE + p_cone->origin_addr * 2;
+		while(pos < CONSOLE_BASE + p_cone->origin_addr * 2 + p_cone->mem_limit * 2){			//清屏
+			*pos++ = ' ';			
+			*pos++ = CONSOLE_COLOR;
+		}
+		p_cone->cursor = p_cone->origin_addr;
+		p_cone->current_start_addr = p_cone->origin_addr;
+		set_vga_start_addr(p_cone->current_start_addr);
+		set_cursor(p_cone->cursor);
+	}
+	/***************************************************************************/
+	pos = (u8*)(CONSOLE_BASE + p_cone->cursor * 2);	//指向当前控制台显示地址
 	if(ch == '\n')
 		if(p_cone->cursor < p_cone->origin_addr + p_cone->mem_limit - SCREEN_WIDTH)
 			p_cone->cursor = p_cone->origin_addr + SCREEN_WIDTH * ((p_cone->cursor - p_cone->origin_addr) / SCREEN_WIDTH + 1);
@@ -252,18 +263,6 @@ PUBLIC void set_cursor(unsigned int position){
 	out_byte(CRT_DATA_REG,position & 0xff);  
 	enable_int();
 }
-
-/*
-						弃用
-PUBLIC int sys_write(char* buf, int len, PROCESS* p_proc){
-	char* p = buf;
-	int i = len;
-	while(i){
-		disp_char(tty_table[p_proc->nr_tty].p_console, *p++);
-		i--;
-	}
-	return 0;
-}*/
 
 PUBLIC int sys_printx(int unused1, int unused2, char* str, PROCESS* p_proc){
 	const char* p;

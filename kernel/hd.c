@@ -178,7 +178,7 @@ PRIVATE void hd_rw(MESSAGE* msg){
 	int drive = DEV_TO_DIV(msg->DEVICE);
 	int device = msg->DEVICE;
 	int pos = msg->POSITION;					//相对扇区数
-	pos += msg->DEVICE <= NR_MAX_PRIME ? \
+	pos += msg->DEVICE < NR_MAX_PRIME ? \
 			hdinfo[drive].primary[device].base : \
 			hdinfo[drive].extend[(msg->DEVICE - MINOR_hd1a) % NR_SUB_PER_DIV].base;
 	CMD cmd;
@@ -186,8 +186,8 @@ PRIVATE void hd_rw(MESSAGE* msg){
 	cmd.features = 0;
 	cmd.sector_num = (msg->COUNT + 512 -1) / 512;			//扇区数
 	cmd.lba_low = pos & 0xff;
-	cmd.lba_mid = (pos >> 8) % 0xff;
-	cmd.lba_high = (pos >> 16) % 0xff;
+	cmd.lba_mid = (pos >> 8) & 0xff;
+	cmd.lba_high = (pos >> 16) & 0xff;
 	cmd.device = SET_DEVICE_REG((pos >> 24) & 0xf, drive, 1);
 	cmd.cmd = (msg->type == DEV_READ) ? READ : WRITE;
 	send_cmd_ata0(&cmd);
