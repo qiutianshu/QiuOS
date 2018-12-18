@@ -30,7 +30,7 @@ d4:pi.o start.o
 	ld -Ttext 0x1000 -m elf_i386 -o pi pi.o start.o ../lib/crt.a 
 
 tar:ps bxtar echo pi
-	tar vcf cmd.tar ps bxtar echo pi
+	tar vcf cmd.tar loader.bin kernel.bin ps bxtar echo pi
 
 dd:
 	dd if=cmd.tar of=../80m.img seek=27131392 bs=1 count=102400 conv=notrunc

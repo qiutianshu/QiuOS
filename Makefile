@@ -25,7 +25,7 @@ OBJS		=	lib/kliba.o kernel/kernel.o kernel/start.o 	kernel/i8259.o kernel/protec
 
 QiuOSKERNEL	=	kernel/kernel.bin
 
-.PHONY:		everything clean all bulidimg
+.PHONY:		everything clean all
 
 #Default start position
 everything:	$(QiuOSBOOT) $(OBJS) $(QiuOSKERNEL)
@@ -33,7 +33,7 @@ everything:	$(QiuOSBOOT) $(OBJS) $(QiuOSKERNEL)
 clean:		
 			rm -f $(OBJS) $(QiuOSBOOT) $(QiuOSKERNEL)
 
-all:		clean everything bulidimg start
+all:		clean everything start
 
 
 

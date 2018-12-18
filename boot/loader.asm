@@ -11,6 +11,34 @@
 	PageDirBase			equ		100000h		; 页目录开始地址: 1M
 	PageTblBase			equ		101000h		; 页表开始地址:   1M + 4K
 
+	TRANS_SECT_NR		equ		2
+	SECT_BUF_SIZE		equ		TRANS_SECT_NR * 512
+	KERNEL_FILE_SEG		equ		0x8000
+	KERNEL_FILE_OFF		equ		0
+	ROOT_BASE			equ		0xf000			;根设备起始扇区
+
+	SB_ROOT_INODE			equ		7 * 4			;root_inode在超级块中的偏移
+	SB_INODE_SIZE			equ		8 * 4			;inode_size偏移
+	SB_NR_IMAP_SECTS		equ		3 * 4
+	SB_NR_SMAP_SECTS		equ		4 * 4
+	SB_INODE_ISIZE_OFF		equ		9 * 4
+	SB_INODE_START_OFF		equ		10 * 4
+	SB_DIR_ENT_FNAME_OFF	equ		13 * 4
+	SB_DIR_ENT_SIZE			equ		11 * 4
+	SB_DIR_ENT_INODE_OFF	equ		12 * 4
+
+disk_addr_packet:
+	db	0x10				;0 packet字节数
+	db	0					;1 保留
+	db	TRANS_SECT_NR		;2 要传输的块数
+	db	0					;3 保留
+	dw	KERNEL_FILE_OFF		;4 内核加载地址偏移
+	dw	KERNEL_FILE_SEG		;6 内核加载段
+	dd 	0					;8 lba低32位
+	dd  0					;12 lba高32位
+
+
+
 ;GDT
 ;								段基址			段界限					段属性
 GDT:		Descriptor       	 0,             0,                      0					;空描述符
@@ -30,22 +58,29 @@ SelectorFlatC		equ	 FLAT_C - GDT
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;磁盘有关数据
 ;-------------------------------------------------------------------------------------------------------------------------------
-wSectorNo			dw			0				;记录当前搜索扇区
-wNumOfSector		dw			0
-wNextDataBlock		dw			0
-%include "fat12hdr.inc"
+;wSectorNo			dw			0				;记录当前搜索扇区
+;wNumOfSector		dw			0
+;wNextDataBlock		dw			0
+
 
 	
 ;显示字符串长度默认10
+	MessageLength		equ 		10
 	Message1			db 			"Loading   "
 	Message2			db 			"Ready!    "
 	Message3			db 			"Scan   Mem"
-	KernelFileName		db			"KERNEL  BIN"
+	KernelFileName		db			"kernel.bin"
 	BootMessage			db			"Booting   "
 	NotFound 			db 			"No Kernel!"
+	FOUND 				db 			"Success!  "
+	ERROR 				db 			"Error!    "
 
+err:
+	mov dh, 7
+	call disp
+	jmp $
 
-	LABEL_START:
+LABEL_START:
 		mov ax,cs 
 		mov ds,ax
 		mov es,ax
@@ -78,100 +113,75 @@ CHACK_FAIL:
 CHECK_OK:
 ;加载内核
 ;-------------------------------------------------------------------------------------------------------------------------
-		mov dh,2
-		push Message1
-		call DispStrInRM
-		add sp,2
+	mov eax, [fs:SB_ROOT_INODE]							;根目录inode号(借用的boot中的fs)
+	call get_inode
 
-		xor ah,ah			
-		xor dl,dl	
-		int 13h										;软驱复位
+	mov dword [disk_addr_packet + 8], eax				;读取根目录
+	call read_sector									;注意，kernel.bin和loader必须位于根目录前面，因为此处只读取2个扇区
 
-		mov byte [wSectorNo],SectorNoOfRootDir		;根目录扇区号
-		mov word [wNumOfSector],14					;根目录扇区数
+	mov si, KernelFileName
+	push bx 											;inode缓冲区偏移，保存
+
+.str_cmp:
+	add bx, [fs:SB_DIR_ENT_FNAME_OFF]					;文件名在dir entry中的偏移
 .1:
-		cmp word [wNumOfSector],0
-		jz .FILE_NOT_FOUND							;没有找到KERNEL.BIN
+	lodsb												;ds:si -> al
+	cmp al, byte [es:bx]
+	jz .2
+	jmp .different
 
-		dec word [wNumOfSector]
-		mov ax,BaseOfKernelFile
-		mov es,ax
-		mov bx,OffsetOfKernelFile
-		mov ax,[wSectorNo]
-		mov cl,1									;读取1个根目录扇区到es:bx
-		call ReadSector								;0x7c92
+.2:
+	cmp al, 0											;是否结束
+	jz .found
+	inc bx
+	jmp .1
 
-		mov si,KernelFileName						;ds:si->内核文件名
-		mov di,OffsetOfKernelFile 					;es:di
-		mov dl,0x10 								;每个扇区的条目数
-.4:
-		cmp dl,0									;0x7c9d
-		je .NEXT_SECTOR
-		mov cx,0xb		
-		dec dl							
-		cld
-.3:
-		cmp cx,0
-		je .FILE_FOUND 								;找到文件
-		lodsb										;ds:si->al
-		cmp al,byte [es:di]
-		jne .NEXT_ENTRY
-		inc di
-		dec cx
-		jmp .3
+.different:
+	pop bx 												;弹出inode首地址
+	add bx, [fs:SB_DIR_ENT_SIZE]						;下一个dir entry
+	sub ecx, [fs:SB_DIR_ENT_SIZE]						;根目录大小自减
+	jz .not_found
 
-.NEXT_ENTRY:
-		and di,0xffe0								;回到本条目
-		add di,0x20									;下一个条目
-		mov si,KernelFileName	
-		jmp .4
+	mov dx, SECT_BUF_SIZE
+	cmp bx, dx
+	jge	.not_found										;超出范围
 
-.NEXT_SECTOR:
-		inc byte [wSectorNo]						;下一个扇区
-		jmp .1
+	push bx
+	mov si, KernelFileName
+	jmp .str_cmp
 
-.FILE_NOT_FOUND:
-		mov dh,3
-		push NotFound
-		call DispStrInRM
-		add sp,2
-		jmp $
+.not_found:  
+	mov dh, 5
+	call disp
+	jmp $
 
-.FILE_FOUND:
-;		mov ax,14									;0x7ced
-		and di,0xffe0
-		add di,0x1a									;此条目对应的起始簇号
-		mov cx,[es:di]								;0x7cf5
-		mov word [wNextDataBlock],OffsetOfKernelFile
-NEXT_DATA_BLOCK:
-		mov ah,0xe 
-		mov al,"."
-		mov bl,0xf 
-		int 10h
+.found:
+	pop bx
+	add bx, [fs:SB_DIR_ENT_INODE_OFF]
+	mov eax, [es:bx]									;inode_nr of Kernel
+	call get_inode
+	mov dword [disk_addr_packet + 8], eax				;start sector of Kernel
 
-		push cx										;暂存扇区
-		add cx,31
-		mov ax,BaseOfKernelFile
-		mov es,ax
-		mov bx,[wNextDataBlock]
-		mov ax,cx
+load_kernel:
+	call read_sector									;ecx <- size of loader
+	cmp ecx, SECT_BUF_SIZE
+	jl .done
+	sub ecx, SECT_BUF_SIZE
+	add word [disk_addr_packet + 4], SECT_BUF_SIZE		;写入地址自加
+	jc .1 												;kernel超过64kb
+	jmp .2
 
-		mov cl,1									;读取数据区第一个扇区
-		call ReadSector								;0x7d17
-		pop ax
-		call SelectorNoOfFAT
-		cmp ax,0xff0
-		jnb LOAD_OK									;最后一个簇加载完毕
-		mov cx,ax
-		add word [wNextDataBlock],0x200
-		jmp NEXT_DATA_BLOCK
+.1:
+	add	word  [disk_addr_packet + 6], 1000h
 
-LOAD_OK:
-		call KillMotor								;关闭软驱马达
-		mov dh,3
-		push Message2
-		call DispStrInRM
-		add sp,2
+.2:
+	add dword [disk_addr_packet + 8], TRANS_SECT_NR
+	jmp load_kernel
+
+.done:
+	mov dh, 6
+	call disp
+
 ;进入保护模式 
 ;--------------------------------------------------------------------------------------------------------------------
 ;加载GDT
@@ -192,91 +202,74 @@ LOAD_OK:
 
 		jmp dword SelectorFlatC:(0x90000 + LABEL_PM)			;跳转到32位实模式0x902d0
 
-;ax存放逻辑扇区号，cl存放读取扇区数，es:bx指向缓冲区  
-;int 13h中断，ah=2，al=扇区数，ch=柱面号，cl=起始扇区号，dh=磁头号，dl=驱动器号，es:bx->数据区
-ReadSector:
-	push bp
-	mov bp,sp
-	sub sp,1								;局部空间存放扇区数
-	mov byte [bp-1],cl 						;存放读取的扇区数
-	push bx									;暂存缓冲区
-	mov bl,[BPB_SECPerTrk]					;每磁道扇区数
-	div bl
-	inc ah
-	mov cl,ah								;起始扇区号
-	mov ch,al								
-	shr ch,1								;磁道号
-	mov dh,al
-	and dh,1								;磁头号
-	pop bx 									;es:bx指向数据区
+;-------------------------------------------------
+;读取扇区
+;输入：指向disk_addr_packet的指针
+;返回: es:bx指向缓冲区，ax:bx指向缓冲区
+;-------------------------------------------------
+read_sector:
+	xor ebx, ebx
+	mov ah, 0x42
+	mov dl, 0x80
+	mov si, disk_addr_packet
+	int 0x13 
 
-.read:
-	mov ah,2
-	mov al,[bp-1]							;扇区数 
-	mov dl,0
-	int 13h
-	jc .read 								;出现错误一直读
-
-	add sp,1
-	pop bp
-
+	mov ax, [disk_addr_packet + 6]
+	mov es, ax
+	mov bx, [disk_addr_packet + 4]
 	ret
 
+;-------------------------------------------------
+;读取inode
+;输入：eax-> inode编号
+;返回：eax 		首扇区逻辑地址
+;	  ecx 		inode->i_size
+;	  es:ebx	指向inode缓冲区
+;-------------------------------------------------
+get_inode:
+	dec eax                 					;inode_nr - 1
+	mov bl, [fs:SB_INODE_SIZE]
+	mul bl 										;eax = (inode_nr - 1) * SB_INODE_SIZE;;首字节在inode array中的偏移
+	mov edx, SECT_BUF_SIZE
+	sub edx, dword [fs:SB_INODE_SIZE]			;要get的inode必须在1kb的inode array之内，否则报错
+	cmp eax, edx
+	jg  err
+	push eax
 
-;根据扇区号寻找FAT项的值，参数ax，返回值ax
-SelectorNoOfFAT:
-	push bp
-	mov bp,sp
-	sub sp,2
-	push es
-	push ax
-	mov ax,BaseOfLoader
-	sub ax,0x100
-	mov es,ax
-	pop ax
+	mov ebx, [fs:SB_NR_IMAP_SECTS]
+	mov edx, [fs:SB_NR_SMAP_SECTS]
+	lea eax, [ebx + edx + ROOT_BASE + 2]
+	mov dword [disk_addr_packet + 8], eax
+	call read_sector
 
-	xor dx,dx
-	mov bx,3
-	mul bx
-	mov bx,2
-	div bx 							;ax->偏移，dx->余数
-	cmp dx,0
-	je EVEN
-	mov byte [bp-2],1					;奇
-	jmp NEXT
-EVEN:
-	mov byte [bp-2],0					;偶
-NEXT:
-	xor dx,dx
-	mov bx,512
-	div bx 							;ax->相对于FAT表的扇区号，dx->扇区内的偏移
-	push dx
+	pop eax
 
-	add ax,1 						;加上第一个FAT表的扇区号
-	mov bx,0						;es:bx->(BaseOfLoader-0x100):0
-	mov cl,2						;读2个扇区
-	call ReadSector
+	mov edx, dword [fs:SB_INODE_ISIZE_OFF]
+	add edx, ebx
+	add edx, eax								;i_size
+	mov ecx, [es:edx]							;根目录大小(字节)
 
-	pop dx
-	add bx,dx
-	mov ax,[es:bx]
-	cmp byte [bp-2],1
-	jnz EVEN2
-	shr ax,4
-EVEN2:
-	and ax,0xfff
+	add ax, word [fs:SB_INODE_START_OFF]
 
-	pop es
-	add sp,2
-	pop bp
+	add bx, ax
+	mov eax, [es:bx]
+	add eax, ROOT_BASE							;文件首扇区
 	ret
-;关闭软驱马达
-KillMotor:
-	push dx
-	mov dx,0x03f2
-	mov al,0
-	out dx,al
-	pop dx
+;-------------------------------------------------
+;显示字符串，dh对应于字符串序号
+;-------------------------------------------------
+disp:
+	mov ax, MessageLength
+	mul ah
+	add ax, Message1
+	mov bp, ax
+	mov ax, ds
+	mov es, ax
+	mov cx, MessageLength			;字符串长度
+	mov ax, 0x1301					
+	mov bx, 0x7 					;页号0  黑底白字0x7
+	mov dl, 0
+	int 0x10
 	ret
 
 ;参数1=指向字符串的指针，长度默认10,dh指定行号
