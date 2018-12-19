@@ -6,7 +6,7 @@ STACK_BASE			equ		0x7c00
 TRANS_SECT_NR		equ		2
 SECT_BUF_SIZE		equ		TRANS_SECT_NR * 512
 SUPER_BLK_SEG		equ		0x70
-ROOT_BASE			equ		0xf000			;根设备起始扇区
+ROOT_BASE			equ		0x4eff			;根设备起始扇区
 LOADER_OFF			equ		0x100
 LOADER_SEG			equ		0x9000
 
@@ -56,7 +56,7 @@ boot_start:
 	mov dword [disk_addr_packet + 6], LOADER_SEG		;loader加载的段
 
 	mov eax, [fs:SB_ROOT_INODE]							;根目录inode号
-	call get_inode
+	call get_inode										;0x7c54
 
 	mov dword [disk_addr_packet + 8], eax				;读取根目录
 	call read_sector									;注意，kernel.bin和loader必须位于根目录前面，因为此处只读取2个扇区
@@ -98,14 +98,14 @@ boot_start:
 	jmp $
 
 .found:
-	pop bx
+	pop bx 												;0x7c98
 	add bx, [fs:SB_DIR_ENT_INODE_OFF]
 	mov eax, [es:bx]									;inode_nr of loader
 	call get_inode
 	mov dword [disk_addr_packet + 8], eax				;start sector of loader
 
 load_loader:
-	call read_sector									;ecx <- size of loader
+	call read_sector									;ecx <- size of loader   0x7ca9
 	cmp ecx, SECT_BUF_SIZE
 	jl .done
 	sub ecx, SECT_BUF_SIZE
@@ -115,9 +115,9 @@ load_loader:
 	jmp load_loader
 
 .done:
-	mov dh, 4 
+	mov dh, 3 											;0x7cce
 	call disp
-	jmp LOADER_SEG:LOADER_OFF
+	jmp LOADER_SEG:LOADER_OFF								;0x7cd3
 	jmp $
 
 ;-------------------------------------------------
@@ -136,7 +136,7 @@ Message3				db      "Booting  "
 ;-------------------------------------------------
 disp:
 	mov ax, MessageLength
-	mul ah
+	mul dh
 	add ax, BootMessage
 	mov bp, ax
 	mov ax, ds

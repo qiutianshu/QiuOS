@@ -5,7 +5,7 @@
 	BaseOfStack			equ		0x100
 	BaseOfLoader		equ		0x9000
 	OffsetOfLoader		equ		0x100
-	BaseOfKernelFile	equ		0x8000
+	BaseOfKernelFile	equ		0x7000
 	OffsetOfKernelFile	equ		0
 	SectorNoOfRootDir	equ		19
 	PageDirBase			equ		100000h		; 页目录开始地址: 1M
@@ -15,7 +15,7 @@
 	SECT_BUF_SIZE		equ		TRANS_SECT_NR * 512
 	KERNEL_FILE_SEG		equ		0x8000
 	KERNEL_FILE_OFF		equ		0
-	ROOT_BASE			equ		0xf000			;根设备起始扇区
+	ROOT_BASE			equ		0x4eff			;根设备起始扇区
 
 	SB_ROOT_INODE			equ		7 * 4			;root_inode在超级块中的偏移
 	SB_INODE_SIZE			equ		8 * 4			;inode_size偏移
@@ -69,14 +69,14 @@ SelectorFlatC		equ	 FLAT_C - GDT
 	Message1			db 			"Loading   "
 	Message2			db 			"Ready!    "
 	Message3			db 			"Scan   Mem"
-	KernelFileName		db			"kernel.bin"
 	BootMessage			db			"Booting   "
 	NotFound 			db 			"No Kernel!"
 	FOUND 				db 			"Success!  "
 	ERROR 				db 			"Error!    "
+	KernelFileName 		db          "kernel.bin",0
 
 err:
-	mov dh, 7
+	mov dh, 6
 	call disp
 	jmp $
 
@@ -120,7 +120,7 @@ CHECK_OK:
 	call read_sector									;注意，kernel.bin和loader必须位于根目录前面，因为此处只读取2个扇区
 
 	mov si, KernelFileName
-	push bx 											;inode缓冲区偏移，保存
+	push bx 											;inode缓冲区偏移，保存    0x000901f3
 
 .str_cmp:
 	add bx, [fs:SB_DIR_ENT_FNAME_OFF]					;文件名在dir entry中的偏移
@@ -151,12 +151,12 @@ CHECK_OK:
 	jmp .str_cmp
 
 .not_found:  
-	mov dh, 5
+	mov dh, 4
 	call disp
 	jmp $
 
 .found:
-	pop bx
+	pop bx 												;0x0009022a
 	add bx, [fs:SB_DIR_ENT_INODE_OFF]
 	mov eax, [es:bx]									;inode_nr of Kernel
 	call get_inode
@@ -179,8 +179,8 @@ load_kernel:
 	jmp load_kernel
 
 .done:
-	mov dh, 6
-	call disp
+	mov dh, 5
+	call disp 											;0x00090268
 
 ;进入保护模式 
 ;--------------------------------------------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ load_kernel:
 		or  eax,1
 		mov cr0,eax
 
-		jmp dword SelectorFlatC:(0x90000 + LABEL_PM)			;跳转到32位实模式0x902d0
+		jmp dword SelectorFlatC:(0x90000 + LABEL_PM)			;跳转到32位实模式0x902d0    0x00090281
 
 ;-------------------------------------------------
 ;读取扇区
@@ -260,7 +260,7 @@ get_inode:
 ;-------------------------------------------------
 disp:
 	mov ax, MessageLength
-	mul ah
+	mul dh
 	add ax, Message1
 	mov bp, ax
 	mov ax, ds
@@ -298,25 +298,26 @@ LABEL_PM:
 	mov ax,SelectorFlatRw				;整个0-4GB空间都是代码段、数据段、栈段
 	mov ds,ax
 	mov es,ax
+	mov fs,ax
 	mov ss,ax
 	mov esp,TopOfStack
 	mov ax,SelectorVideo
 	mov gs,ax
 
 	push szMemChkTitle
-	call DispStr 				;0x904df
+	call DispStr 				;0x0009035a
 	add esp,4
-	call DispMemSIze
+	call DispMemSIze			;0x00090362
 
-	call SetupPaging			;设置分页 0x903c7
+	call SetupPaging			;设置分页 0x00090367
 ;映射内核代码
-	call InitKernel
+	call InitKernel				;0x0009036c
 
 	mov eax,[dwMemSize]
 	mov [Memsize],eax
 
 ;向内核转移控制权
-	jmp SelectorFlatC:0x30400
+	jmp SelectorFlatC:0x30400	;0x0009037b
 	
 
 

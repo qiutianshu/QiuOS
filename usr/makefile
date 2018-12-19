@@ -5,6 +5,9 @@
 
 all:echo.o ps.o bxtar.o pi.o d1 d2 d3 d4 tar dd
 
+clean:		
+	 rm -f echo.o ps.o bxtar.o pi.o
+
 echo.o:echo.c
 	  gcc -I ../include/ -m32 -c -fno-builtin -Wall -o echo.o echo.c
 
@@ -29,7 +32,7 @@ d3:bxtar.o start.o
 d4:pi.o start.o
 	ld -Ttext 0x1000 -m elf_i386 -o pi pi.o start.o ../lib/crt.a 
 
-tar:ps bxtar echo pi
+tar:ps bxtar echo pi kernel.bin loader.bin
 	tar vcf cmd.tar loader.bin kernel.bin ps bxtar echo pi
 
 dd:

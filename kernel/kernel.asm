@@ -75,21 +75,21 @@ global hwint15
 global restart
 
 _start:
-	mov esp,StackTop
+	mov esp,StackTop 							;0x30400
 	mov dword [disp_pos],0
 	sgdt [gdt_ptr]
-	call cstart
+	call cstart 								;0x00030416
 	lgdt [gdt_ptr]
 	lidt [idt_ptr]
 
-	jmp SELECTOR_KERNEL_CS:csinit
+	jmp SELECTOR_KERNEL_CS:csinit 				;0x00030429
 
 csinit:
 	
 	xor	eax, eax
 	mov	ax, SELECTOR_TSS
 	ltr	ax
-	jmp kernel_main
+	jmp kernel_main 							;0x00030439
 
 
 

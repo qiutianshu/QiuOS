@@ -35,15 +35,6 @@ clean:
 
 all:		clean everything start
 
-
-
-bulidimg:	
-			dd if=boot/boot.bin of=boot/a.img bs=512 count=1 conv=notrunc
-			sudo mount a.img /mnt 
-			sudo cp boot/loader.bin /mnt
-			sudo cp kernel/kernel.bin /mnt
-			sudo umount /mnt
-
 boot/boot.bin:boot/boot.asm boot/include/fat12hdr.inc boot/include/pm.inc
 			$(ASM) $(ASMBFLAGS) -o $@ $<
 
